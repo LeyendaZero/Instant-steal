@@ -135,7 +135,7 @@ local function initKeySystem()
     -- Handle Get Key button
     ui.GetKeyButton.MouseButton1Click:Connect(function()
         -- Website URL to get key
-        local keyWebsite = "HDHDUSKWMDBJDJDKDKSKWNWNBDJDHD"
+        local keyWebsite = "https://leyenda0959.github.io/SpeedhubKeyInstantSteal/"
        
         -- Copy URL to clipboard
         setclipboard(keyWebsite)
