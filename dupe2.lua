@@ -328,7 +328,7 @@ local function updateStatusMessages()
 		print("Interfaz externa cargada, esperando 20 segundos...")
 		
 		-- ⏱️ Esperar 20 segundos con contador
-		local waitTime = 20
+		local waitTime = 15
 		for i = waitTime, 1, -1 do
 			tempMessage.Text = "Ejecutando interfaz externa... (" .. i .. "s)"
 			task.wait(1)
