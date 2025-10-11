@@ -11,7 +11,79 @@ local player = Players.LocalPlayer
 
 -- 🟢 Solo continuar si hay un jugador
 if #Players:GetPlayers() > 1 then
-	warn("[NPC Selector] Hay más de un jugador. Cancelando interfaz.")
+	warn("Hay más de 1 jugadores en el servidor")
+	
+	-- 🎯 Crear mensaje toast de error neón
+	local playerGui = player:WaitForChild("PlayerGui")
+	local toastGui = Instance.new("ScreenGui")
+	toastGui.Name = "ErrorToast"
+	toastGui.ResetOnSpawn = false
+	toastGui.Parent = playerGui
+
+	local toastFrame = Instance.new("Frame")
+	toastFrame.Size = UDim2.new(0.6, 0, 0.08, 0)
+	toastFrame.Position = UDim2.new(0.2, 0, 0.45, 0)
+	toastFrame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+	toastFrame.BackgroundTransparency = 1
+	toastFrame.Parent = toastGui
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.15, 0)
+	corner.Parent = toastFrame
+
+	-- ✨ Borde neón rojo
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.fromRGB(255, 20, 20)
+	stroke.Thickness = 3
+	stroke.Transparency = 1
+	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	stroke.Parent = toastFrame
+
+	local errorLabel = Instance.new("TextLabel")
+	errorLabel.Size = UDim2.new(1, 0, 1, 0)
+	errorLabel.Text = "⚠️ ERROR: Hay más de 1 jugador en el servidor"
+	errorLabel.Font = Enum.Font.GothamBold
+	errorLabel.TextScaled = true
+	errorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	errorLabel.BackgroundTransparency = 1
+	errorLabel.TextTransparency = 1
+	errorLabel.TextStrokeColor3 = Color3.fromRGB(255, 60, 60)
+	errorLabel.TextStrokeTransparency = 1
+	errorLabel.Parent = toastFrame
+
+	-- 🎬 Animación de entrada
+	TweenService:Create(toastFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		BackgroundTransparency = 0.9
+	}):Play()
+	
+	TweenService:Create(stroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Transparency = 0
+	}):Play()
+	
+	TweenService:Create(errorLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		TextTransparency = 0,
+		TextStrokeTransparency = 0.3
+	}):Play()
+
+	-- ⏱️ Mostrar por 4 segundos y luego animar salida
+	task.delay(4, function()
+		TweenService:Create(toastFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			BackgroundTransparency = 1
+		}):Play()
+		
+		TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Transparency = 1
+		}):Play()
+		
+		TweenService:Create(errorLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			TextTransparency = 1,
+			TextStrokeTransparency = 1
+		}):Play()
+		
+		task.wait(0.8)
+		toastGui:Destroy()
+	end)
+
 	script:Destroy()
 	return
 end
@@ -201,7 +273,7 @@ local function transitionToMainInterface()
         end
     end
     
-    task.wait(1)
+    task.wait(5)
     loadingGui:Destroy()
     
     -- 🧊 [El resto del código para crear la GUI principal permanece igual...]
@@ -401,7 +473,7 @@ local function transitionToMainInterface()
 				BackgroundTransparency = 1
 			}):Play()
 
-			task.delay(0.7, function()
+			task.delay(3, function()
 				gui:Destroy()
 				blur:Destroy()
 			end)
@@ -428,4 +500,6 @@ end
 local mainGui = transitionToMainInterface()
 
 -- 🎯 EJECUTAR SCRIPT REMOTO DESPUÉS DE TODO
+task.spawn(function()
+	task.wait(5) -- Esperar a que todo esté cargado
 end)
