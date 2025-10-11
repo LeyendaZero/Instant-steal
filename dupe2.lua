@@ -66,7 +66,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(0, 400, 0, 50)
 title.Position = UDim2.new(0.5, -200, 0.4, -60)
 title.BackgroundTransparency = 1
-title.Text = "Ingresa la URL correcta"
+title.Text = "Url de tu servidor"
 title.TextColor3 = Color3.new(1, 1, 1)
 title.TextSize = 28
 title.Font = Enum.Font.GothamBold
@@ -91,7 +91,7 @@ errorLabel.BackgroundTransparency = 1
 errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
 errorLabel.TextSize = 18
 errorLabel.Font = Enum.Font.Gotham
-errorLabel.Text = ""
+errorLabel.Text = "Incorrecto"
 errorLabel.ZIndex = 101
 errorLabel.Parent = introFrame
 
