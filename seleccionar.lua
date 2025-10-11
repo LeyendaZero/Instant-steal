@@ -97,7 +97,7 @@ local function createLoadingScreen()
 	loadingGui.Name = "LoadingGUI"
 	loadingGui.IgnoreGuiInset = true
 	loadingGui.ResetOnSpawn = false
-	loadingGui.DisplayOrder = 999
+	loadingGui.DisplayOrder = 10
 	loadingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	loadingGui.Parent = playerGui
 
@@ -210,41 +210,85 @@ end
 
 -- ⚠️ Si no hay NPCs válidos en Plots, mostrar un toast
 if #availableNPCs == 0 then
-	warn("[SpeedX dupe] tus brainrots don incompatibilies")
-	
-	local guiToast = Instance.new("ScreenGui")
-	guiToast.Parent = player:WaitForChild("PlayerGui")
-	
-	local toast = Instance.new("TextLabel")
-	toast.Size = UDim2.new(0.6, 0, 0.1, 0)
-	toast.Position = UDim2.new(0.2, 0, 0.45, 0)
-	toast.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-	toast.Text = "⚠️ Brainrots incompatibles 1M/s>"
-	toast.Font = Enum.Font.GothamBold
-	toast.TextScaled = true
-	toast.TextColor3 = Color3.fromRGB(255, 255, 255)
-	toast.BackgroundTransparency = 1
-	toast.Parent = guiToast
+    warn("[SpeedX dupe] tus brainrots don incompatibilies")
+    
+    -- PRIMERO destruir la pantalla de carga
+    loadingGui:Destroy()
+    
+    -- LUESO crear el toast con alta prioridad
+    local playerGui = player:WaitForChild("PlayerGui")
+    local toastGui = Instance.new("ScreenGui")
+    toastGui.Name = "ErrorToast"
+    toastGui.ResetOnSpawn = false
+    toastGui.DisplayOrder = 10  -- Darle prioridad alta
+    toastGui.Parent = playerGui
 
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0.2, 0)
-	corner.Parent = toast
+    local toastFrame = Instance.new("Frame")
+    toastFrame.Size = UDim2.new(0.6, 0, 0.08, 0)
+    toastFrame.Position = UDim2.new(0.2, 0, 0.45, 0)
+    toastFrame.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+    toastFrame.BackgroundTransparency = 1
+    toastFrame.Parent = toastGui
 
-	-- Animación toast
-	TweenService:Create(toast, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		BackgroundTransparency = 0.2
-	}):Play()
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0.15, 0)
+    corner.Parent = toastFrame
 
-	task.delay(2, function()
-		TweenService:Create(toast, TweenInfo.new(0.5), {BackgroundTransparency = 1, TextTransparency = 1}):Play()
-		task.wait(0.6)
-		guiToast:Destroy()
-		loadingGui:Destroy()
-	end)
-	
-	return
+    -- ✨ Borde neón rojo
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(255, 20, 20)
+    stroke.Thickness = 3
+    stroke.Transparency = 1
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Parent = toastFrame
+
+    local errorLabel = Instance.new("TextLabel")
+    errorLabel.Size = UDim2.new(1, 0, 1, 0)
+    errorLabel.Text = "⚠️ Brainrots incompatibles 1M/s>"
+    errorLabel.Font = Enum.Font.GothamBold
+    errorLabel.TextScaled = true
+    errorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    errorLabel.BackgroundTransparency = 1
+    errorLabel.TextTransparency = 1
+    errorLabel.TextStrokeColor3 = Color3.fromRGB(255, 60, 60)
+    errorLabel.TextStrokeTransparency = 1
+    errorLabel.Parent = toastFrame
+
+    -- 🎬 Animación de entrada
+    TweenService:Create(toastFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        BackgroundTransparency = 0.9
+    }):Play()
+    
+    TweenService:Create(stroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Transparency = 0
+    }):Play()
+    
+    TweenService:Create(errorLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        TextTransparency = 0,
+        TextStrokeTransparency = 0.3
+    }):Play()
+
+    -- ⏱️ Mostrar por 3 segundos y luego animar salida
+    task.delay(3, function()
+        TweenService:Create(toastFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 1
+        }):Play()
+        
+        TweenService:Create(stroke, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Transparency = 1
+        }):Play()
+        
+        TweenService:Create(errorLabel, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            TextTransparency = 1,
+            TextStrokeTransparency = 1
+        }):Play()
+        
+        task.wait(0.8)
+        toastGui:Destroy()
+    end)
+    
+    return
 end
-
 -- 🌫️ Efecto glass
 local blur = Instance.new("BlurEffect")
 blur.Size = 25
