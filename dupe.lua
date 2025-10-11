@@ -127,6 +127,8 @@ local function showLoading()
 	ensureTopPriority()
 end
 
+task.delay(10, removeLoading)
+
 -- Ejemplo: remover después de 10 segundos
 -- task.delay(10, removeLoading)
 
