@@ -12,8 +12,12 @@ end
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- 🔇 Silenciar sonidos
-SoundService.Volume = 0
+-- 🔇 Silenciar TODOS los sonidos activos
+for _, sound in ipairs(workspace:GetDescendants()) do
+	if sound:IsA("Sound") then
+		sound.Playing = false
+	end
+end
 
 -- 🔒 Desactivar CoreGui continuamente
 local coreGuiConnection
