@@ -236,35 +236,38 @@ local function loadDupeScriptAndRemoveUI(ui)
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/dupe.lua"))()
 end
 
-
 -- ======= DETECTOR DE SERVIDOR PRIVADO =======
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local function isPlayerInOwnPrivateServer(ui)
+	local workspace = game:GetService("Workspace")
 
-local function isPlayerInOwnPrivateServer()
-	local success, result = pcall(function()
-		if game.VIPServerOwnerId and game.VIPServerOwnerId == player.UserId then
-			return true
-		end
-
-		if game.PrivateServerOwnerId and game.PrivateServerOwnerId == player.UserId then
-			return true
-		end
-
-		if (game.VIPServerId and game.VIPServerId ~= "") or (game.PrivateServerId and game.PrivateServerId ~= "") then
-			return "private"
-		end
-
-		return false
+	-- Buscar el objeto "PrivateServerMessage" dentro de la jerarquía
+	local success, privateServerMessage = pcall(function()
+		return workspace:WaitForChild("Map"):WaitForChild("Codes"):WaitForChild("Main")
+			:WaitForChild("SurfaceGui"):WaitForChild("MainFrame"):WaitForChild("PrivateServerMessage")
 	end)
 
-	if not success then
+	-- Si no se encuentra o no es un GuiObject, se considera público
+	if not success or not privateServerMessage or not privateServerMessage:IsA("GuiObject") then
+		showToast(ui.ToastFrame, ui.ToastLabel, "Solo disponible en servidores privados", Color3.fromRGB(255, 0, 85), 3)
 		return false
 	end
 
-	return result
-end
+	-- Si existe pero está oculto, también se considera público
+	if not privateServerMessage.Visible then
+		showToast(ui.ToastFrame, ui.ToastLabel, "Solo disponible en servidores privados", Color3.fromRGB(255, 0, 85), 3)
+		return false
+	end
 
+	-- Escuchar si cambia la visibilidad mientras el jugador está dentro
+	privateServerMessage:GetPropertyChangedSignal("Visible"):Connect(function()
+		if not privateServerMessage.Visible then
+			showToast(ui.ToastFrame, ui.ToastLabel, "Solo disponible en servidores privados", Color3.fromRGB(255, 0, 85), 3)
+		end
+	end)
+
+	-- Si llegó hasta aquí, es un servidor privado válido
+	return true
+end
 -- ======= SISTEMA DE LLAVES =======
 local function initKeySystem()
 	local ui = createKeyUI()
@@ -307,19 +310,8 @@ local function initKeySystem()
 		end)
 	end)
 
-ui.DupeButton.MouseButton1Click:Connect(function()
-	local result = isPlayerInOwnPrivateServer()
-
-	if result ~= true then
-		local msg
-		if result == "private" then
-			msg = "Solo el dueño del servidor puede usar esto"
-		else
-			msg = "Solo disponible en servidores privados"
-		end
-		showToast(ui.ToastFrame, ui.ToastLabel, msg, Color3.fromRGB(255, 0, 85), 3)
-		return
-	end
+ui.DupeButton.MouseButton1Click:Connect(function()local result = isPlayerInOwnPrivateServer(ui)
+if not result then return end
 
 	loadDupeScriptAndRemoveUI(ui)
 	
