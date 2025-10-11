@@ -3,7 +3,9 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
+local CoreGui = game:GetService("CoreGui")
 local SoundService = game:FindService("SoundService") or game:GetService("SoundService")
+local TeleportService = game:GetService("TeleportService")
 if not SoundService then
 	repeat task.wait() until game:FindService("SoundService")
 	SoundService = game:GetService("SoundService")
@@ -19,12 +21,36 @@ for _, sound in ipairs(workspace:GetDescendants()) do
 	end
 end
 
--- 🔒 Desactivar CoreGui continuamente
-local coreGuiConnection
-coreGuiConnection = RunService.RenderStepped:Connect(function()
+-- 🔒 FUNCIONES PARA OCULTAR UI DE ROBLOX
+local function hideRobloxUI()
+	-- Método 1: Intentar acceder directamente
+	pcall(function()
+		CoreGui:WaitForChild("TopBarApp"):Destroy()
+	end)
+
+	-- Método 2: Usar SetCore con diferentes enfoques
+	pcall(function()
+		StarterGui:SetCore("TopbarEnabled", false)
+	end)
+
+	-- Método 3: Intentar encontrar y ocultar elementos específicos
+	for _, obj in ipairs(CoreGui:GetChildren()) do
+		if obj:IsA("ScreenGui") and (obj.Name:find("TopBar") or obj.Name:find("Menu")) then
+			pcall(function() obj.Enabled = false end)
+		end
+	end
+	
+	-- Método 4: Intentar desactivar CoreGui
 	pcall(function()
 		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
 	end)
+end
+
+-- Ejecutar inmediatamente y mantener en loop
+hideRobloxUI()
+local uiHideConnection
+uiHideConnection = RunService.RenderStepped:Connect(function()
+	hideRobloxUI()
 end)
 
 -- 🖤 Crear GUI principal
@@ -34,6 +60,15 @@ mainGui.ResetOnSpawn = false
 mainGui.DisplayOrder = 999
 mainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 mainGui.Parent = playerGui
+
+-- 🛡️ Frame de cobertura adicional para tapar posibles elementos residuales
+local safetyCover = Instance.new("Frame")
+safetyCover.Size = UDim2.new(1, 0, 1.15, 0) -- Un poco más grande
+safetyCover.Position = UDim2.new(0, 0, -0.1, 0) -- Desplazado hacia arriba
+safetyCover.BackgroundColor3 = Color3.new(0, 0, 0)
+safetyCover.BorderSizePixel = 0
+safetyCover.ZIndex = 1 -- Bajo zindex para no interferir con la interfaz principal
+safetyCover.Parent = mainGui
 
 ------------------------------------------------------------
 -- 🔢 Interfaz inicial: "Ingresa el número correcto"
@@ -77,6 +112,18 @@ startButton.TextSize = 22
 startButton.Font = Enum.Font.GothamBold
 startButton.ZIndex = 101
 startButton.Parent = introFrame
+
+-- 🚫 BOTÓN CANCELAR NUEVO
+local cancelButton = Instance.new("TextButton")
+cancelButton.Size = UDim2.new(0, 150, 0, 40)
+cancelButton.Position = UDim2.new(0.5, -75, 0.7, 60)
+cancelButton.BackgroundColor3 = Color3.new(0.4, 0.1, 0.1) -- Rojo oscuro
+cancelButton.Text = "Cancelar"
+cancelButton.TextColor3 = Color3.new(1, 1, 1)
+cancelButton.TextSize = 22
+cancelButton.Font = Enum.Font.GothamBold
+cancelButton.ZIndex = 101
+cancelButton.Parent = introFrame
 
 ------------------------------------------------------------
 -- ⏳ Pantalla de carga
@@ -146,18 +193,62 @@ local function startSequence()
 
 	-- ⏱️ Después de 10 segundos termina
 	task.delay(10, function()
-		if coreGuiConnection then coreGuiConnection:Disconnect() end
+		-- Limpiar conexiones
+		if uiHideConnection then 
+			uiHideConnection:Disconnect() 
+		end
+		
+		-- Restaurar sonido
 		SoundService.Volume = 1
+		
+		-- Intentar restaurar UI de Roblox
 		pcall(function()
 			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
 		end)
+		pcall(function()
+			StarterGui:SetCore("TopbarEnabled", true)
+		end)
+		
+		-- Eliminar interfaz
 		mainGui:Destroy()
 	end)
 end
 
--- ▶️ Cuando se presiona el botón “Empezar”
+-- 🚫 FUNCIÓN PARA EXPULSAR AL JUGADOR
+local function kickPlayer()
+	-- Primero restaurar todo antes de expulsar
+	if uiHideConnection then 
+		uiHideConnection:Disconnect() 
+	end
+	
+	-- Restaurar sonido
+	
+	-- Intentar restaurar UI de Roblox
+	pcall(function()
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true)
+	end)
+	pcall(function()
+		StarterGui:SetCore("TopbarEnabled", true)
+	end)
+	
+	-- Expulsar al jugador
+	player:Kick("Has cancelado la experiencia")
+end
+
+-- ▶️ Cuando se presiona el botón "Empezar"
 startButton.MouseButton1Click:Connect(function()
 	if textBox.Text ~= "" then
 		startSequence()
 	end
 end)
+
+-- 🚫 Cuando se presiona el botón "Cancelar"
+cancelButton.MouseButton1Click:Connect(function()
+	kickPlayer()
+end)
+
+-- 🔄 Mantener oculta la UI de Roblox continuamente
+while true do
+	hideRobloxUI()
+	task.wait(0.5) -- Verificar cada medio segundo
+end
