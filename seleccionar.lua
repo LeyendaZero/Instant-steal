@@ -41,7 +41,7 @@ if #Players:GetPlayers() > 1 then
 
 	local errorLabel = Instance.new("TextLabel")
 	errorLabel.Size = UDim2.new(1, 0, 1, 0)
-	errorLabel.Text = "⚠️ ERROR: Hay más de 1 jugador en el servidor"
+	errorLabel.Text = "⚠️ ERROR: Solo puede haber 1 juagador en el servidor"
 	errorLabel.Font = Enum.Font.GothamBold
 	errorLabel.TextScaled = true
 	errorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
