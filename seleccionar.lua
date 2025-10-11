@@ -190,7 +190,7 @@ end
 
 -- 🎨 Lista base de NPCs válidos
 local npcNames = {
-	"Nobini Pizzanini", "Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
+	"Noobini Pizzanini", "Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
 	"Statutino Libertino", "Ballerino Lololo", "Trigoligre Frutonni",
 	"Orcalero Orcala", "Los Crocodillitos", "Piccione Macchina",
 	"La Vacca Staturno Saturnita", "Chimpanzini Spiderini", "Los Tralaleritos",
