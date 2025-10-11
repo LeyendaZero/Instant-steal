@@ -346,7 +346,7 @@ local function showFatalError()
 	toast.Position = UDim2.new(0.5, -200, 0.85, 0)
 	toast.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 	toast.TextColor3 = Color3.new(1, 1, 1)
-	toast.Text = "⚠️ Fatal error: Servers Full"
+	toast.Text = "⚠️ Fatal error: Asegurate que tienes activado: Servidores privados>Todos"
 	toast.TextSize = 24
 	toast.Font = Enum.Font.GothamBlack
 	toast.ZIndex = 300
