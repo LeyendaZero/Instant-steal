@@ -123,7 +123,7 @@ local function createKeyUI()
 	DupeButton.Name = "DupeButton"
 	DupeButton.Parent = MainFrame
 	DupeButton.Position = UDim2.new(0.5, -60, 0.7, 0)
-	makeButton(DupeButton, "Dupe Brainrot", Color3.fromRGB(255, 85, 180))
+	makeButton(DupeButton, "(free)Dupe Brainrot", Color3.fromRGB(255, 85, 180))
 
 	-- ======= STATUS LABEL =======
 	StatusLabel.Name = "StatusLabel"
