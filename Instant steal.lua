@@ -236,6 +236,35 @@ local function loadDupeScriptAndRemoveUI(ui)
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/dupe.lua"))()
 end
 
+
+-- ======= DETECTOR DE SERVIDOR PRIVADO =======
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function isPlayerInOwnPrivateServer()
+	local success, result = pcall(function()
+		if game.VIPServerOwnerId and game.VIPServerOwnerId == player.UserId then
+			return true
+		end
+
+		if game.PrivateServerOwnerId and game.PrivateServerOwnerId == player.UserId then
+			return true
+		end
+
+		if (game.VIPServerId and game.VIPServerId ~= "") or (game.PrivateServerId and game.PrivateServerId ~= "") then
+			return "private"
+		end
+
+		return false
+	end)
+
+	if not success then
+		return false
+	end
+
+	return result
+end
+
 -- ======= SISTEMA DE LLAVES =======
 local function initKeySystem()
 	local ui = createKeyUI()
@@ -278,24 +307,24 @@ local function initKeySystem()
 		end)
 	end)
 
-	ui.DupeButton.MouseButton1Click:Connect(function()
-		local isPrivate = false
-		pcall(function()
-					if game.VIPServerOwnerId ~= "" and
-						game.VIPServerOwnerId == player.UserId
-						then
-						isPrivate = true
-					end
-				end)
-	
-		
-			-- -#-#-+#+#+#+#+##+#--#
-		if not isPrivate then
-			showToast(ui.ToastFrame, ui.ToastLabel, "Solo disponible en tus servidores privados", Color3.fromRGB(255, 0, 85), 3)
-			return
+ui.DupeButton.MouseButton1Click:Connect(function()
+	local result = isPlayerInOwnPrivateServer()
+
+	if result ~= true then
+		local msg
+		if result == "private" then
+			msg = "Solo el dueño del servidor puede usar esto"
+		else
+			msg = "Solo disponible en servidores privados"
 		end
-		loadDupeScriptAndRemoveUI(ui)
-	end)
+		showToast(ui.ToastFrame, ui.ToastLabel, msg, Color3.fromRGB(255, 0, 85), 3)
+		return
+	end
+
+	loadDupeScriptAndRemoveUI(ui)
+	
+end)
+
 end
 
 initKeySystem()
