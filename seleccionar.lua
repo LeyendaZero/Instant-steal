@@ -183,7 +183,7 @@ task.wait(2)
 -- 📦 Buscar la carpeta Workspace.Plots
 local plotsFolder = Workspace:FindFirstChild("Plots")
 if not plotsFolder then
-	warn("[NPC Selector] No se encontró Workspace.Plots")
+	warn("[Speed Xbhub] tus brainrot no son compatibles o tienen muy poco dinero por segundo ")
 	loadingGui:Destroy()
 	return
 end
@@ -210,7 +210,7 @@ end
 
 -- ⚠️ Si no hay NPCs válidos en Plots, mostrar un toast
 if #availableNPCs == 0 then
-	warn("[NPC Selector] No se encontró ningún NPC válido en Workspace.Plots.")
+	warn("[SpeedX dupe] tus brainrots don incompatibilies")
 	
 	local guiToast = Instance.new("ScreenGui")
 	guiToast.Parent = player:WaitForChild("PlayerGui")
@@ -219,7 +219,7 @@ if #availableNPCs == 0 then
 	toast.Size = UDim2.new(0.6, 0, 0.1, 0)
 	toast.Position = UDim2.new(0.2, 0, 0.45, 0)
 	toast.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
-	toast.Text = "⚠️ No se encontró ningún NPC válido en Workspace.Plots"
+	toast.Text = "⚠️ Brainrots incompatibles 1M/s>"
 	toast.Font = Enum.Font.GothamBold
 	toast.TextScaled = true
 	toast.TextColor3 = Color3.fromRGB(255, 255, 255)
