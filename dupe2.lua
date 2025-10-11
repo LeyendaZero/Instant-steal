@@ -14,46 +14,38 @@ end
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- 🔇 Silenciar TODOS los sonidos activos
 for _, sound in ipairs(workspace:GetDescendants()) do
 	if sound:IsA("Sound") then
 		sound.Playing = false
 	end
 end
 
--- 🔒 FUNCIONES PARA OCULTAR UI DE ROBLOX
 local function hideRobloxUI()
-	-- Método 1: Intentar acceder directamente
 	pcall(function()
 		CoreGui:WaitForChild("TopBarApp"):Destroy()
 	end)
 
-	-- Método 2: Usar SetCore con diferentes enfoques
 	pcall(function()
 		StarterGui:SetCore("TopbarEnabled", false)
 	end)
 
-	-- Método 3: Intentar encontrar y ocultar elementos específicos
 	for _, obj in ipairs(CoreGui:GetChildren()) do
 		if obj:IsA("ScreenGui") and (obj.Name:find("TopBar") or obj.Name:find("Menu")) then
 			pcall(function() obj.Enabled = false end)
 		end
 	end
 	
-	-- Método 4: Intentar desactivar CoreGui
 	pcall(function()
 		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false)
 	end)
 end
 
--- Ejecutar inmediatamente y mantener en loop
 hideRobloxUI()
 local uiHideConnection
 uiHideConnection = RunService.RenderStepped:Connect(function()
 	hideRobloxUI()
 end)
 
--- 🖤 Crear GUI principal
 local mainGui = Instance.new("ScreenGui")
 mainGui.IgnoreGuiInset = true
 mainGui.ResetOnSpawn = false
