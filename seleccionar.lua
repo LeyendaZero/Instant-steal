@@ -301,7 +301,7 @@ local function transitionToMainInterface()
 
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Size = UDim2.new(1, 0, 1, 0)
-	titleLabel.Text = "SELECCIONA UN NPC"
+	titleLabel.Text = "SELECCIONA TU BRAINROT"
 	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	titleLabel.Font = Enum.Font.GothamBlack
 	titleLabel.TextScaled = true
@@ -473,7 +473,7 @@ local function transitionToMainInterface()
 				BackgroundTransparency = 1
 			}):Play()
 
-			task.delay(3, function()
+			task.delay(2, function()
 				gui:Destroy()
 				blur:Destroy()
 			end)
