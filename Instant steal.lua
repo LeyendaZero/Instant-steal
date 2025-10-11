@@ -245,7 +245,7 @@ local function initKeySystem()
 	animateButton(ui.DupeButton, Color3.fromRGB(255, 120, 200), Color3.fromRGB(255, 85, 180))
 
 	ui.GetKeyButton.MouseButton1Click:Connect(function()
-		local keyWebsite = "https://leyenda0959.github.io/SpeedhubKeyInstantSteal/"
+		local keyWebsite = "https://coomingsoon"
 		pcall(function() setclipboard(keyWebsite) end)
 		showToast(ui.ToastFrame, ui.ToastLabel, "✅ Link copied to clipboard!", Color3.fromRGB(0, 255, 100))
 	end)
