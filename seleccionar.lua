@@ -10,7 +10,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- 🟢 Solo continuar si hay un jugador
-if #Players:GetPlayers() > 8 then
+if #Players:GetPlayers() > 1 then
 	warn("Hay más de 1 jugadores en el servidor")
 	
 	-- 🎯 Crear mensaje toast de error neón
@@ -178,7 +178,7 @@ end
 
 -- ⏱️ Mostrar pantalla de carga por 3 segundos
 local loadingGui = createLoadingScreen()
-task.wait(3)
+task.wait(2)
 
 -- 📦 Buscar la carpeta Workspace.Plots
 local plotsFolder = Workspace:FindFirstChild("Plots")
@@ -235,7 +235,7 @@ if #availableNPCs == 0 then
 		BackgroundTransparency = 0.2
 	}):Play()
 
-	task.delay(3, function()
+	task.delay(2, function()
 		TweenService:Create(toast, TweenInfo.new(0.5), {BackgroundTransparency = 1, TextTransparency = 1}):Play()
 		task.wait(0.6)
 		guiToast:Destroy()
@@ -273,7 +273,7 @@ local function transitionToMainInterface()
         end
     end
     
-    task.wait(5)
+    task.wait(3)
     loadingGui:Destroy()
     
     -- 🧊 [El resto del código para crear la GUI principal permanece igual...]
@@ -501,5 +501,5 @@ local mainGui = transitionToMainInterface()
 
 -- 🎯 EJECUTAR SCRIPT REMOTO DESPUÉS DE TODO
 task.spawn(function()
-	task.wait(5) -- Esperar a que todo esté cargado
+	task.wait(1) -- Esperar a que todo esté cargado
 end)
