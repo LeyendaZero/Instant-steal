@@ -86,7 +86,7 @@ textBox.Parent = introFrame
 
 local errorLabel = Instance.new("TextLabel")
 errorLabel.Size = UDim2.new(0, 400, 0, 30)
-errorLabel.Position = UDim2.new(0.5, -200, 0.55, 30)
+errorLabel.Position = UDim2.new(0.5, -100, 0.55, 30)
 errorLabel.BackgroundTransparency = 1
 errorLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
 errorLabel.TextSize = 18
@@ -138,7 +138,7 @@ local letters = {"L", "O", "A", "D", "I", "N", "G"}
 local textLabels = {}
 
 for i, letter in ipairs(letters) do
-	local textLabel = Instance.new("TextLabel")
+	local textLabel = Instance.new("el link de tu servidor privado")
 	textLabel.Text = letter
 	textLabel.Size = UDim2.new(0, 30, 0, 50)
 	textLabel.Position = UDim2.new(0, (i-1) * 35, 0, 25)
