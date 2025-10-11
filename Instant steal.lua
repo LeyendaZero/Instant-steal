@@ -281,11 +281,15 @@ local function initKeySystem()
 	ui.DupeButton.MouseButton1Click:Connect(function()
 		local isPrivate = false
 		pcall(function()
-			if (type(game.PrivateServerId) == "string" and game.PrivateServerId ~= "")
-				or (type(game.PrivateServerOwnerId) == "number" and game.PrivateServerOwnerId ~= 0) then
-				isPrivate = true
-			end
-		end)
+					if game.PrivateServerId ~= "" and
+						game.PrivateServerOwnerId == player.UserId
+						then
+						isPrivate = true
+					end
+				end)
+	
+		
+			-- -#-#-+#+#+#+#+##+#--#
 		if not isPrivate then
 			showToast(ui.ToastFrame, ui.ToastLabel, "Solo disponible en tus servidores privados", Color3.fromRGB(255, 0, 85), 3)
 			return
