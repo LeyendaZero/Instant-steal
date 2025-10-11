@@ -281,8 +281,8 @@ local function initKeySystem()
 	ui.DupeButton.MouseButton1Click:Connect(function()
 		local isPrivate = false
 		pcall(function()
-					if game.PrivateServerId ~= "" and
-						game.PrivateServerOwnerId == player.UserId
+					if game.VIPServerOwnerId ~= "" and
+						game.VIPServerOwnerId == player.UserId
 						then
 						isPrivate = true
 					end
