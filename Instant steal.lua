@@ -233,7 +233,7 @@ end
 
 local function loadDupeScriptAndRemoveUI(ui)
 	ui.ScreenGui:Destroy()
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/Dupe.lua"))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/dupe.lua"))()
 end
 
 -- ======= SISTEMA DE LLAVES =======
