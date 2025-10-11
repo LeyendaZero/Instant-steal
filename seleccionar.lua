@@ -10,7 +10,7 @@ local RunService = game:GetService("RunService")
 local player = Players.LocalPlayer
 
 -- 🟢 Solo continuar si hay un jugador
-if #Players:GetPlayers() > 1 then
+if #Players:GetPlayers() > 8 then
 	warn("Hay más de 1 jugadores en el servidor")
 	
 	-- 🎯 Crear mensaje toast de error neón
@@ -449,7 +449,7 @@ local function transitionToMainInterface()
 						BackgroundTransparency = 1,
 						TextStrokeTransparency = 1
 					}):Play()
-					local otherStroke = otherBtn:FindFirstChildOfType("UIStroke")
+					local otherStroke = otherBtn:FindFirstChildWhichIsA("UIStroke")
 					if otherStroke then
 						TweenService:Create(otherStroke, exitTweenInfo, {
 							Transparency = 1
