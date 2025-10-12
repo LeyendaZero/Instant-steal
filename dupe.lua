@@ -1,3 +1,7 @@
+
+
+
+
 -- Sistema de detección de múltiples jugadores para Roblox
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -103,6 +107,32 @@ print("• Máximo permitido: 1 jugador")
 print("==========================================")
 
 -- Tu código de Roblox continúa aquí...
+
+
+
+-- LocalScript
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Espera a que exista el HumanoidRootPart
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+-- Guardamos su posición
+local savedCFrame = hrp.CFrame
+
+-- Lo eliminamos del personaje temporalmente
+hrp.Parent = nil
+print("HumanoidRootPart eliminado temporalmente")
+
+-- Esperamos unos segundos
+task.wait(2)
+
+-- Lo volvemos a colocar en el personaje
+hrp.Parent = character
+hrp.CFrame = savedCFrame
+print("HumanoidRootPart restaurado")
+
+
 
 
 
