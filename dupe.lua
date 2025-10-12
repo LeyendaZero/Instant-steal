@@ -1,6 +1,110 @@
--- Este es un LocalScript, colócalo en:
--- StarterGui > ScreenGui > (LocalScript aquí)
--- LocalScript para eliminar todos los sonidos en Workspace en tiempo real
+-- Sistema de detección de múltiples jugadores para Roblox
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Función para verificar y expulsar jugadores si hay más de uno
+local function checkPlayerCount()
+    local playerCount = #Players:GetPlayers()
+    
+    if playerCount > 1 then
+        -- Mostrar mensaje a todos los jugadores
+        for _, player in ipairs(Players:GetPlayers()) do
+            local message = "❌ Solo debe haber un jugador en el servidor. Saliendo..."
+            
+            -- Intentar mostrar mensaje en la pantalla del jugador
+            local playerGui = player:FindFirstChild("PlayerGui")
+            if playerGui then
+                local screenGui = Instance.new("ScreenGui")
+                local textLabel = Instance.new("TextLabel")
+                
+                screenGui.Parent = playerGui
+                textLabel.Parent = screenGui
+                
+                textLabel.Size = UDim2.new(1, 0, 1, 0)
+                textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+                textLabel.TextColor3 = Color3.new(1, 0, 0)
+                textLabel.Text = message
+                textLabel.Font = Enum.Font.SourceSansBold
+                textLabel.TextSize = 24
+                textLabel.ZIndex = 10
+            end
+            
+            -- También mostrar en output (consola)
+            print("[SISTEMA] " .. message .. " Jugador: " .. player.Name)
+        end
+        
+        -- Esperar 3 segundos antes de expulsar
+        wait(3)
+        
+        -- Expulsar a todos los jugadores
+        for _, player in ipairs(Players:GetPlayers()) do
+            player:Kick("Solo debe haber un jugador en el servidor")
+        end
+        
+        return true -- Se expulsaron jugadores
+    end
+    
+    return false -- No se necesitó expulsar
+end
+
+-- Sistema de verificación inicial (20 segundos)
+local startTime = tick()
+local initialCheckConnection
+
+initialCheckConnection = RunService.Heartbeat:Connect(function()
+    local elapsedTime = tick() - startTime
+    
+    -- Verificar cada segundo durante los primeros 20 segundos
+    if elapsedTime % 1 < 0.1 then -- Aproximadamente cada segundo
+        local playerCount = #Players:GetPlayers()
+        print(string.format("[Sistema] Jugadores: %d/1 - Tiempo: %d segundos", playerCount, math.floor(elapsedTime)))
+        
+        if checkPlayerCount() then
+            initialCheckConnection:Disconnect()
+            return
+        end
+    end
+    
+    -- Después de 20 segundos, desconectar esta verificación intensiva
+    if elapsedTime >= 20 then
+        print("[Sistema] Período inicial de 20 segundos completado")
+        initialCheckConnection:Disconnect()
+        
+        -- Iniciar verificación menos frecuente
+        while true do
+            wait(5) -- Verificar cada 5 segundos
+            
+            local playerCount = #Players:GetPlayers()
+            print(string.format("[Sistema] Verificación continua - Jugadores: %d/1", playerCount))
+            
+            checkPlayerCount()
+        end
+    end
+end)
+
+-- También verificar cuando un jugador se une
+Players.PlayerAdded:Connect(function(player)
+    wait(1) -- Esperar un momento para que se actualice el count
+    
+    local playerCount = #Players:GetPlayers()
+    print("[Sistema] Jugador añadido: " .. player.Name .. " - Total: " .. playerCount)
+    
+    if playerCount > 1 then
+        checkPlayerCount()
+    end
+end)
+
+-- Mensaje de inicio
+print("==========================================")
+print("SISTEMA DE JUGADOR ÚNICO ACTIVADO - ROBLOX")
+print("• Verificación inicial: 20 segundos")
+print("• Verificación continua: Cada 5 segundos")
+print("• Máximo permitido: 1 jugador")
+print("==========================================")
+
+-- Tu código de Roblox continúa aquí...
+
+
 
 local workspace = game:GetService("Workspace")
 
