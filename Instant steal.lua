@@ -118,7 +118,7 @@ local function createKeyUI()
 	GetKeyButton.Name = "GetKeyButton"
 	GetKeyButton.Parent = MainFrame
 	GetKeyButton.Position = UDim2.new(0.58, 0, 0.48, 0)
-	makeButton(GetKeyButton, "No key soon", Color3.fromRGB(0, 200, 255))
+	makeButton(GetKeyButton, "Get Key", Color3.fromRGB(0, 200, 255))
 
 	DupeButton.Name = "DupeButton"
 	DupeButton.Parent = MainFrame
@@ -277,7 +277,7 @@ local function initKeySystem()
 	animateButton(ui.DupeButton, Color3.fromRGB(255, 120, 200), Color3.fromRGB(255, 85, 180))
 
 	ui.GetKeyButton.MouseButton1Click:Connect(function()
-		local keyWebsite = "https://coomingsoon"
+		local keyWebsite = "https://leyenda0959.github.io/SpeedhubKeyInstantSteal/"
 		pcall(function() setclipboard(keyWebsite) end)
 		showToast(ui.ToastFrame, ui.ToastLabel, "✅ Link copied to clipboard!", Color3.fromRGB(0, 255, 100))
 	end)
@@ -285,7 +285,7 @@ local function initKeySystem()
 	ui.SubmitButton.MouseButton1Click:Connect(function()
 		local key = ui.KeyInput.Text
 		if key == "" then
-			ui.StatusLabel.Text = "Cooming son no key"
+			ui.StatusLabel.Text = "enter key"
 			ui.StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 			return
 		end
