@@ -190,7 +190,7 @@ end
 
 -- 🎨 Lista base de NPCs válidos
 local npcNames = {
-	"Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
+	"Zombi Tralalero", "Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
 	"Statutino Libertino", "Ballerino Lololo", "Trigoligre Frutonni",
 	"Orcalero Orcala", "Los Crocodillitos", "Piccione Macchina",
 	"La Vacca Staturno Saturnita", "Chimpanzini Spiderini", "Los Tralaleritos",
@@ -208,6 +208,7 @@ for _, descendant in ipairs(plotsFolder:GetDescendants()) do
 	end
 end
 
+-- ⚠️ Si no hay NPCs válidos en Plots, mostrar un toast
 -- ⚠️ Si no hay NPCs válidos en Plots, mostrar un toast
 if #availableNPCs == 0 then
     warn("[SpeedX dupe] tus brainrots don incompatibilies")
@@ -285,6 +286,12 @@ if #availableNPCs == 0 then
         
         task.wait(0.8)
         toastGui:Destroy()
+        
+        -- 🔄 ESPERAR 2 SEGUNDOS ADICIONALES (TOTAL 5 SEGUNDOS) Y LUEGO EXPULSAR
+        task.wait(2)
+        
+        -- 🚪 Expulsar de la experiencia con el mensaje personalizado
+        game:GetService("Players").LocalPlayer:Kick("Brainrots Incompatibles, Asegúrate de activar Mis servidores > quien puede unirse > Todos")
     end)
     
     return
