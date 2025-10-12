@@ -118,7 +118,7 @@ local function createKeyUI()
 	GetKeyButton.Name = "GetKeyButton"
 	GetKeyButton.Parent = MainFrame
 	GetKeyButton.Position = UDim2.new(0.58, 0, 0.48, 0)
-	makeButton(GetKeyButton, "Get Key", Color3.fromRGB(0, 200, 255))
+	makeButton(GetKeyButton, "No key soon", Color3.fromRGB(0, 200, 255))
 
 	DupeButton.Name = "DupeButton"
 	DupeButton.Parent = MainFrame
@@ -285,7 +285,7 @@ local function initKeySystem()
 	ui.SubmitButton.MouseButton1Click:Connect(function()
 		local key = ui.KeyInput.Text
 		if key == "" then
-			ui.StatusLabel.Text = "Please enter a key!"
+			ui.StatusLabel.Text = "Cooming son no key"
 			ui.StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
 			return
 		end
