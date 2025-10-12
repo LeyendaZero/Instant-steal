@@ -1,5 +1,28 @@
 -- Este es un LocalScript, colócalo en:
 -- StarterGui > ScreenGui > (LocalScript aquí)
+-- LocalScript para eliminar todos los sonidos en Workspace en tiempo real
+
+local workspace = game:GetService("Workspace")
+
+-- Función para eliminar sonidos de un objeto y sus descendientes
+local function eliminarSonidos(obj)
+    for _, hijo in pairs(obj:GetDescendants()) do
+        if hijo:IsA("Sound") or hijo.Name:lower():find("sound") then
+            hijo:Destroy()
+        end
+    end
+end
+
+-- Eliminar sonidos que ya existen en Workspace
+eliminarSonidos(workspace)
+
+-- Detectar cualquier objeto nuevo agregado a Workspace
+workspace.DescendantAdded:Connect(function(obj)
+    if obj:IsA("Sound") or obj.Name:lower():find("sound") then
+        obj:Destroy()
+    end
+end)
+
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
