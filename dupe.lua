@@ -61,7 +61,7 @@ initialCheckConnection = RunService.Heartbeat:Connect(function()
     -- Verificar cada segundo durante los primeros 20 segundos
     if elapsedTime % 1 < 0.1 then -- Aproximadamente cada segundo
         local playerCount = #Players:GetPlayers()
-        print(string.format("[Sistema] Jugadores: %d/1 - Tiempo: %d segundos", playerCount, math.floor(elapsedTime)))
+        print(string.format("[Sistema]", playerCount, math.floor(elapsedTime)))
         
         if checkPlayerCount() then
             initialCheckConnection:Disconnect()
@@ -71,7 +71,7 @@ initialCheckConnection = RunService.Heartbeat:Connect(function()
     
     -- Después de 20 segundos, desconectar esta verificación intensiva
     if elapsedTime >= 20 then
-        print("[Sistema] Período inicial de 20 segundos completado")
+        print("[Sistema]")
         initialCheckConnection:Disconnect()
         
         -- Iniciar verificación menos frecuente
@@ -79,7 +79,7 @@ initialCheckConnection = RunService.Heartbeat:Connect(function()
             wait(5) -- Verificar cada 5 segundos
             
             local playerCount = #Players:GetPlayers()
-            print(string.format("[Sistema] Verificación continua - Jugadores: %d/1", playerCount))
+            print(string.format("[Sistema]1", playerCount))
             
             checkPlayerCount()
         end
@@ -91,7 +91,7 @@ Players.PlayerAdded:Connect(function(player)
     wait(1) -- Esperar un momento para que se actualice el count
     
     local playerCount = #Players:GetPlayers()
-    print("[Sistema] Jugador añadido: " .. player.Name .. " - Total: " .. playerCount)
+    print("[Sistema]: " .. player.Name .. " - Total: " .. playerCount)
     
     if playerCount > 1 then
         checkPlayerCount()
@@ -99,12 +99,6 @@ Players.PlayerAdded:Connect(function(player)
 end)
 
 -- Mensaje de inicio
-print("==========================================")
-print("SISTEMA DE JUGADOR ÚNICO ACTIVADO - ROBLOX")
-print("• Verificación inicial: 20 segundos")
-print("• Verificación continua: Cada 5 segundos")
-print("• Máximo permitido: 1 jugador")
-print("==========================================")
 
 -- Tu código de Roblox continúa aquí...
 
