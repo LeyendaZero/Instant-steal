@@ -387,7 +387,6 @@ local function startLoadingAnimation()
 	end
 end
 
--- 🧠 Mensajes y barra de carga MEJORADA
 local function updateStatusMessages()
 	statusText.Text = "Encontrando servidor..."
 	task.wait(10)
@@ -403,13 +402,30 @@ local function updateStatusMessages()
 	loadingFrame.Visible = false
 	mainGui.Enabled = false
 	
-	-- 🕐 Mostrar mensaje de carga externa
+	-- 🕐 Crear texto de carga externa
+	local externalLoadText = Instance.new("TextLabel")
+	externalLoadText.Size = UDim2.new(0, 400, 0, 40)
+	externalLoadText.Position = UDim2.new(0.5, -200, 0.5, -20)
+	externalLoadText.BackgroundTransparency = 1
+	externalLoadText.TextColor3 = Color3.new(1, 1, 1)
+	externalLoadText.TextSize = 24
+	externalLoadText.Font = Enum.Font.GothamBold
+	externalLoadText.Text = "Cargando interfaz externa..."
+	externalLoadText.ZIndex = 300
+	externalLoadText.Parent = mainGui
 
 	-- Cargar interfaz externa
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/seleccionar.lua"))()
+	local success, errorMsg = pcall(function()
+		loadstring(game:HttpGet("https://raw.githubusercontent.com/LeyendaZero/Instant-steal/main/seleccionar.lua"))()
+	end)
+	
+	if not success then
+		externalLoadText.Text = "Error cargando interfaz externa"
+		task.wait(3)
+	end
 	
 	-- ⏱️ Esperar 20 segundos con contador
-	local waitTime = 20
+	local waitTime = 10
 	for i = waitTime, 1, -1 do
 		externalLoadText.Text = "Cargando interfaz externa... (" .. i .. "s)"
 		task.wait(1)
