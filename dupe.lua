@@ -1,104 +1,66 @@
-
-
-
-
--- Sistema de detección de múltiples jugadores para Roblox
+-- Colocar en: StarterGui > ScreenGui > LocalScript
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 -- Función para verificar y expulsar jugadores si hay más de uno
 local function checkPlayerCount()
     local playerCount = #Players:GetPlayers()
-    
     if playerCount > 1 then
-        -- Mostrar mensaje a todos los jugadores
-        for _, player in ipairs(Players:GetPlayers()) do
-            local message = "❌ Solo debe haber un jugador en el servidor. Saliendo..."
-            
-            -- Intentar mostrar mensaje en la pantalla del jugador
-            local playerGui = player:FindFirstChild("PlayerGui")
-            if playerGui then
-                local screenGui = Instance.new("ScreenGui")
-                local textLabel = Instance.new("TextLabel")
-                
-                screenGui.Parent = playerGui
-                textLabel.Parent = screenGui
-                
-                textLabel.Size = UDim2.new(1, 0, 1, 0)
-                textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-                textLabel.TextColor3 = Color3.new(1, 0, 0)
-                textLabel.Text = message
-                textLabel.Font = Enum.Font.SourceSansBold
-                textLabel.TextSize = 24
-                textLabel.ZIndex = 10
-            end
-            
-            -- También mostrar en output (consola)
-            print("[SISTEMA] " .. message .. " Jugador: " .. player.Name)
+        -- Mostrar mensaje a todos los jugadores locales (este LocalScript solo afecta al cliente actual)
+        local player = Players.LocalPlayer
+        local playerGui = player and player:FindFirstChild("PlayerGui")
+        if playerGui then
+            local screenGui = Instance.new("ScreenGui")
+            local textLabel = Instance.new("TextLabel")
+            screenGui.Parent = playerGui
+            textLabel.Parent = screenGui
+
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+            textLabel.TextColor3 = Color3.new(1, 0, 0)
+            textLabel.Text = "❌ Solo debe haber un jugador en el servidor. Saliendo..."
+            textLabel.Font = Enum.Font.SourceSansBold
+            textLabel.TextSize = 24
+            textLabel.ZIndex = 10
         end
-        
-        -- Esperar 3 segundos antes de expulsar
-        wait(3)
-        
-        -- Expulsar a todos los jugadores
-        for _, player in ipairs(Players:GetPlayers()) do
-            player:Kick("Solo debe haber un jugador en el servidor")
-        end
-        
-        return true -- Se expulsaron jugadores
+
+        print("[SISTEMA] Hay más de 1 jugador en el servidor. (Cuenta: " .. tostring(playerCount) .. ")")
+
+        -- Nota: desde un LocalScript no podrás kickear a otros jugadores en el servidor.
+        -- player:Kick("Solo debe haber un jugador en el servidor") -- esto solo afectaría al jugador local
+        return true
     end
-    
-    return false -- No se necesitó expulsar
+    return false
 end
 
--- Sistema de verificación inicial (20 segundos)
+-- -------------------------------------------------------
+-- Fase inicial: comprobar **solo** durante 3 segundos y terminar
+-- -------------------------------------------------------
 local startTime = tick()
-local initialCheckConnection
+local playerAddedConn
 
-initialCheckConnection = RunService.Heartbeat:Connect(function()
-    local elapsedTime = tick() - startTime
-    
-    -- Verificar cada segundo durante los primeros 20 segundos
-    if elapsedTime % 1 < 0.1 then -- Aproximadamente cada segundo
-        local playerCount = #Players:GetPlayers()
-        print(string.format("[Sistema]", playerCount, math.floor(elapsedTime)))
-        
-        if checkPlayerCount() then
-            initialCheckConnection:Disconnect()
-            return
-        end
-    end
-    
-    -- Después de 20 segundos, desconectar esta verificación intensiva
-    if elapsedTime >= 3 then
-        print("[Sistema]")
-        initialCheckConnection:Disconnect()
-        
-        -- Iniciar verificación menos frecuente
-        while true do
-            wait(5) -- Verificar cada 5 segundos
-            
-            local playerCount = #Players:GetPlayers()
-            print(string.format("[Sistema]1", playerCount))
-            
-            checkPlayerCount()
-        end
-    end
-end)
-
--- También verificar cuando un jugador se une
-Players.PlayerAdded:Connect(function(player)
-    wait(1) -- Esperar un momento para que se actualice el count
-    
-    local playerCount = #Players:GetPlayers()
-    print("[Sistema]: " .. player.Name .. " - Total: " .. playerCount)
-    
-    if playerCount > 1 then
+-- Solo conectar PlayerAdded durante la fase inicial.
+playerAddedConn = Players.PlayerAdded:Connect(function()
+    -- Si estamos todavía dentro de los 3 segundos, hacemos una verificación rápida
+    if tick() - startTime <= 3 then
+        -- pequeña espera para dejar que el count se actualice
+        wait(0.2)
         checkPlayerCount()
     end
 end)
 
--- Mensaje de inicio
+-- Bucle activo durante 3 segundos
+while tick() - startTime < 3 do
+    checkPlayerCount()
+    wait(0.5) -- revisar cada 0.5s durante los 3 segundos
+end
+
+-- Terminar: desconectar listener y dejar de hacer comprobaciones
+if playerAddedConn then
+    playerAddedConn:Disconnect()
+    playerAddedConn = nil
+end
+
 
 -- Tu código de Roblox continúa aquí...
 
