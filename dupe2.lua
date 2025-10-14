@@ -66,7 +66,7 @@ initialCheckConnection = RunService.Heartbeat:Connect(function()
     end
     
     -- Después de 20 segundos, desconectar esta verificación intensiva
-    if elapsedTime >= 20 then
+    if elapsedTime >= 3 then
         print("[Sistema]")
         initialCheckConnection:Disconnect()
         
