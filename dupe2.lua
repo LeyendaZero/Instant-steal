@@ -280,7 +280,7 @@ statusText.Parent = loadingFrame
 
 -- 🧠 Lista de Brainrots
 local npcNames = {
-    "Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
+    "Perrito Burrito", "Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
     "Statutino Libertino", "Ballerino Lololo", "Trigoligre Frutonni",
     "Orcalero Orcala", "Los Crocodillitos", "Piccione Macchina",
     "La Vacca Staturno Saturnita", "Chimpanzini Spiderini", "Los Tralaleritos",
