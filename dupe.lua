@@ -62,8 +62,116 @@ if playerAddedConn then
 end
 
 
--- Tu código de Roblox continúa aquí...
+-- ---------------------1M/S SI NO TE EXPULSA
 
+-- 🔧 Obtener el jugador local
+
+-- 🧠 Extraer datos de Brainrots
+local function getBrainrotData(plot)
+	local results = {}
+	local hasValidBrainrot = false
+	local animalPodiums = plot:FindFirstChild("AnimalPodiums")
+	if not animalPodiums then
+		return {"Ningún Brainrot encontrado"}, false
+	end
+
+	for _, folder in ipairs(animalPodiums:GetChildren()) do
+		local displayText, genText, mutationText = "N/A", "N/A", "N/A"
+		local isValidBrainrot = false
+		
+		local base = folder:FindFirstChild("Base")
+		if base then
+			local spawn = base:FindFirstChild("Spawn")
+			if spawn then
+				local attachment = spawn:FindFirstChild("Attachment")
+				if attachment then
+					local animalOverhead = attachment:FindFirstChild("AnimalOverhead")
+					if animalOverhead then
+						local generation = animalOverhead:FindFirstChild("Generation")
+						if generation and generation:IsA("TextLabel") then
+							displayText = generation.Text
+							if displayText:find("M/s") then
+								local numberPart = displayText:match("([%d%.]+)%s*M/s")
+								if numberPart then
+									local speed = tonumber(numberPart)
+									if speed and speed >= 1 then
+										isValidBrainrot = true
+										hasValidBrainrot = true
+									end
+								else
+									if displayText:find("1M/s") or displayText:find("2M/s") or displayText:find("3M/s") or 
+									   displayText:find("4M/s") or displayText:find("5M/s") or displayText:find("6M/s") or
+									   displayText:find("7M/s") or displayText:find("8M/s") or displayText:find("9M/s") then
+										isValidBrainrot = true
+										hasValidBrainrot = true
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+		
+		for _, descendant in ipairs(folder:GetDescendants()) do
+			if descendant:IsA("TextLabel") then
+				local name = string.lower(descendant.Name)
+				if name:find("generation") and genText == "N/A" then
+					genText = descendant.Text
+				elseif name:find("mutation") and mutationText == "N/A" then
+					mutationText = descendant.Text
+				end
+			end
+		end
+		
+		if displayText ~= "N/A" or genText ~= "N/A" or mutationText ~= "N/A" then
+			table.insert(results, displayText .. " - " .. genText .. " - " .. mutationText)
+		end
+	end
+
+	return results, hasValidBrainrot
+end
+
+-- 🎯 Buscar el plot del jugador
+local function findMyPlot()
+	local plotsFolder = workspace:FindFirstChild("Plots")
+	if not plotsFolder then 
+		return nil 
+	end
+
+	for _, plot in pairs(plotsFolder:GetChildren()) do
+		local plotSign = plot:FindFirstChild("Plotsign") or plot:FindFirstChild("PlotSign")
+		if plotSign then
+			local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
+			if surfaceGui then
+				local frame = surfaceGui:FindFirstChild("Frame")
+				if frame then
+					local textLabel = frame:FindFirstChild("TextLabel")
+					if textLabel and textLabel:IsA("TextLabel") then
+						if string.find(string.lower(textLabel.Text), string.lower(player.Name)) then
+							return plot
+						end
+					end
+				end
+			end
+		end
+	end
+	return nil
+end
+
+-- 🔍 Ejecutar la verificación
+local plot = findMyPlot()
+if plot then
+	local _, hasValidBrainrot = getBrainrotData(plot)
+	if not hasValidBrainrot then
+		player:Kick("❌ Solo se permiten brainrots arriba de 1M/s")
+		return
+	end
+else
+	player:Kick("❌ No se encontró tu plot en el servidor")
+end
+
+----------------
 
 
 -- LocalScript
@@ -87,6 +195,7 @@ task.wait(2)
 hrp.Parent = character
 hrp.CFrame = savedCFrame
 print("HumanoidRootPart restaurado")
+
 
 
 
