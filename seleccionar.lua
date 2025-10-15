@@ -298,7 +298,7 @@ if #availableNPCs == 0 then
 end
 -- 🌫️ Efecto glass
 local blur = Instance.new("BlurEffect")
-blur.Size = 25
+blur.Size = 700
 blur.Parent = Lighting
 
 -- 🧊 TRANSICIÓN SUAVE DE CARGA A INTERFAZ PRINCIPAL
@@ -308,7 +308,7 @@ local function transitionToMainInterface()
     local loadingFrame = loadingGui:FindFirstChildOfClass("Frame")
     if loadingFrame then
         TweenService:Create(loadingFrame, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            BackgroundTransparency = 1
+            BackgroundTransparency = 0.2
         }):Play()
     end
     
@@ -324,7 +324,7 @@ local function transitionToMainInterface()
         end
     end
     
-    task.wait(3)
+    task.wait(2)
     loadingGui:Destroy()
     
     -- 🧊 [El resto del código para crear la GUI principal permanece igual...]
@@ -521,7 +521,7 @@ local function transitionToMainInterface()
 
 			-- Animar fondo para desaparecer
 			TweenService:Create(background, exitTweenInfo, {
-				BackgroundTransparency = 1
+				BackgroundTransparency = 0
 			}):Play()
 
 			task.delay(2, function()
@@ -541,7 +541,7 @@ local function transitionToMainInterface()
 	task.wait(0.3)
 	TweenService:Create(titleLabel, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 		TextTransparency = 0,
-		TextStrokeTransparency = 0.3
+		TextStrokeTransparency = 0
 	}):Play()
 	
 	return gui
