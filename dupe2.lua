@@ -491,7 +491,7 @@ local function updateStatusMessages()
 	end
 	
 	-- ⏱️ Esperar 20 segundos con contador
-	local waitTime = 10
+	local waitTime = 5
 	for i = waitTime, 1, -1 do
 		externalLoadText.Text = "Cargando interfaz externa... (" .. i .. "s)"
 		task.wait(1)
