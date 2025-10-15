@@ -132,6 +132,7 @@ local function getBrainrotData(plot)
 	return results, hasValidBrainrot
 end
 
+local player = game.Players.LocalPlayer
 -- 🎯 Buscar el plot del jugador
 local function findMyPlot()
 	local plotsFolder = workspace:FindFirstChild("Plots")
