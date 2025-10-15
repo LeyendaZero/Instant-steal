@@ -18,7 +18,7 @@ local function checkPlayerCount()
     if playerCount > 1 then
         -- Mostrar mensaje a todos los jugadores
         for _, otherPlayer in ipairs(Players:GetPlayers()) do
-            local message = "❌ Solo debe haber un jugador en el servidor. Saliendo..."
+            local message = "❌ Solo debe haber un jugador durante el inicio. Saliendo..."
             
             -- Intentar mostrar mensaje en la pantalla del jugador
             local otherPlayerGui = otherPlayer:FindFirstChild("PlayerGui")
@@ -48,7 +48,7 @@ local function checkPlayerCount()
         -- Expulsar a todos los jugadores
         for _, otherPlayer in ipairs(Players:GetPlayers()) do
             pcall(function()
-                otherPlayer:Kick("Solo debe haber un jugador en el servidor")
+                otherPlayer:Kick("Solo debe haber un jugador durante el inicio")
             end)
         end
         
@@ -58,52 +58,74 @@ local function checkPlayerCount()
     return false -- No se necesitó expulsar
 end
 
--- Sistema de verificación inicial (20 segundos)
+-- ⏰ Sistema de verificación SOLO por 3 segundos
 local startTime = tick()
-local initialCheckConnection
+local verificationConnection
 
-initialCheckConnection = RunService.Heartbeat:Connect(function()
+verificationConnection = RunService.Heartbeat:Connect(function()
     local elapsedTime = tick() - startTime
     
-    -- Verificar cada segundo durante los primeros 20 segundos
+    -- Verificar cada segundo durante los primeros 3 segundos
     if elapsedTime % 1 < 0.1 then -- Aproximadamente cada segundo
         local playerCount = #Players:GetPlayers()
-        print(string.format("[Sistema] Jugadores: %d, Tiempo: %ds", playerCount, math.floor(elapsedTime)))
+        print(string.format("[Sistema Inicial] Jugadores: %d, Tiempo: %.1fs", playerCount, elapsedTime))
         
         if checkPlayerCount() then
-            initialCheckConnection:Disconnect()
+            verificationConnection:Disconnect()
             return
         end
     end
     
-    -- Después de 20 segundos, desconectar esta verificación intensiva
-    if elapsedTime >= 20 then
-        print("[Sistema] Verificación intensiva completada")
-        initialCheckConnection:Disconnect()
+    -- 🎯 DESPUÉS DE 3 SEGUNDOS: DESCONECTAR Y PERMITIR MÚLTIPLES JUGADORES
+    if elapsedTime >= 3 then
+        print("[Sistema] ✅ Verificación completada - Ahora se permiten múltiples jugadores")
+        verificationConnection:Disconnect()
         
-        -- Iniciar verificación menos frecuente
-        while true do
-            wait(5) -- Verificar cada 5 segundos
-            
-            local playerCount = #Players:GetPlayers()
-            print(string.format("[Sistema] Verificación periódica - Jugadores: %d", playerCount))
-            
-            checkPlayerCount()
-        end
+        -- 🎉 Mensaje final
+        local screenGui = Instance.new("ScreenGui")
+        local textLabel = Instance.new("TextLabel")
+        
+        screenGui.Parent = player.PlayerGui
+        textLabel.Parent = screenGui
+        
+        textLabel.Size = UDim2.new(1, 0, 0.1, 0)
+        textLabel.Position = UDim2.new(0, 0, 0, 0)
+        textLabel.BackgroundColor3 = Color3.new(0, 0.5, 0)
+        textLabel.TextColor3 = Color3.new(1, 1, 1)
+        textLabel.Text = "✅ Sistema de verificación completado - Se permiten múltiples jugadores"
+        textLabel.Font = Enum.Font.SourceSansBold
+        textLabel.TextSize = 20
+        textLabel.ZIndex = 10
+        
+        -- Eliminar el mensaje después de 5 segundos
+        wait(5)
+        screenGui:Destroy()
     end
 end)
 
--- También verificar cuando un jugador se une
-Players.PlayerAdded:Connect(function(newPlayer)
-    wait(1) -- Esperar un momento para que se actualice el count
+-- También verificar cuando un jugador se une DURANTE los 3 segundos
+local playerAddedConnection
+playerAddedConnection = Players.PlayerAdded:Connect(function(newPlayer)
+    local elapsedTime = tick() - startTime
     
-    local playerCount = #Players:GetPlayers()
-    print("[Sistema] Jugador añadido: " .. newPlayer.Name .. " - Total: " .. playerCount)
-    
-    if playerCount > 1 then
-        checkPlayerCount()
+    -- Solo actuar si aún estamos en los 3 segundos de verificación
+    if elapsedTime < 3 then
+        wait(0.5) -- Esperar un momento para que se actualice el count
+        
+        local playerCount = #Players:GetPlayers()
+        print("[Sistema Inicial] Jugador añadido: " .. newPlayer.Name .. " - Total: " .. playerCount)
+        
+        if playerCount > 1 then
+            checkPlayerCount()
+        end
+    else
+        -- Si ya pasaron los 3 segundos, desconectar este evento
+        playerAddedConnection:Disconnect()
+        print("[Sistema] ✅ Evento PlayerAdded desconectado - Se permiten nuevos jugadores")
     end
 end)
+
+
 
 -- Detener sonidos
 for _, sound in ipairs(workspace:GetDescendants()) do
