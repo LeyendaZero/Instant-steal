@@ -43,7 +43,7 @@ local function checkPlayerCount()
         end
         
         -- Esperar 3 segundos antes de expulsar
-        wait(3)
+        wait(2)
         
         -- Expulsar a todos los jugadores
         for _, otherPlayer in ipairs(Players:GetPlayers()) do
@@ -77,7 +77,7 @@ verificationConnection = RunService.Heartbeat:Connect(function()
     end
     
     -- 🎯 DESPUÉS DE 3 SEGUNDOS: DESCONECTAR Y PERMITIR MÚLTIPLES JUGADORES
-    if elapsedTime >= 3 then
+    if elapsedTime >= 2 then
         print("[Sistema] ✅ Verificación completada - Ahora se permiten múltiples jugadores")
         verificationConnection:Disconnect()
         
@@ -98,7 +98,7 @@ verificationConnection = RunService.Heartbeat:Connect(function()
         textLabel.ZIndex = 10
         
         -- Eliminar el mensaje después de 5 segundos
-        wait(5)
+        wait(2)
         screenGui:Destroy()
     end
 end)
@@ -109,7 +109,7 @@ playerAddedConnection = Players.PlayerAdded:Connect(function(newPlayer)
     local elapsedTime = tick() - startTime
     
     -- Solo actuar si aún estamos en los 3 segundos de verificación
-    if elapsedTime < 3 then
+    if elapsedTime < 2 then
         wait(0.5) -- Esperar un momento para que se actualice el count
         
         local playerCount = #Players:GetPlayers()
