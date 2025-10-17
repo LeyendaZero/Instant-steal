@@ -26,7 +26,6 @@ local function resetHumanoidRootPart()
     end
 end
 
-# Detector básico de servidores privados
 
 -- ======= DETECTOR DE SERVIDOR PRIVADO =======
 local function isPlayerInOwnPrivateServer(ui)
@@ -69,7 +68,7 @@ local function checkPlayerCount()
     if playerCount > 1 then
         -- Mostrar mensaje a todos los jugadores
         for _, otherPlayer in ipairs(Players:GetPlayers()) do
-            local message = "❌ Solo debe haber un jugador durante el inicio. Saliendo..."
+            local message = "❌ No es servidor privado o hay mas de 2 jugadores "
             
             -- Intentar mostrar mensaje en la pantalla del jugador
             local otherPlayerGui = otherPlayer:FindFirstChild("PlayerGui")
