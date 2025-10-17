@@ -26,6 +26,42 @@ local function resetHumanoidRootPart()
     end
 end
 
+# Detector básico de servidores privados
+
+-- ======= DETECTOR DE SERVIDOR PRIVADO =======
+local function isPlayerInOwnPrivateServer(ui)
+    local workspace = game:GetService("Workspace")
+
+    -- Buscar el objeto "PrivateServerMessage" dentro de la jerarquía
+    local success, privateServerMessage = pcall(function()
+        return workspace:WaitForChild("Map"):WaitForChild("Codes"):WaitForChild("Main")
+            :WaitForChild("SurfaceGui"):WaitForChild("MainFrame"):WaitForChild("PrivateServerMessage")
+    end)
+
+    -- Si no se encuentra o no es un GuiObject, se considera público
+    if not success or not privateServerMessage or not privateServerMessage:IsA("GuiObject") then
+        showToast(ui.ToastFrame, ui.ToastLabel, "Solo disponible en servidores privados", Color3.fromRGB(255, 0, 85), 3)
+        return false
+    end
+
+    -- Si existe pero está oculto, también se considera público
+    if not privateServerMessage.Visible then
+        showToast(ui.ToastFrame, ui.ToastLabel, "Solo disponible en servidores privados", Color3.fromRGB(255, 0, 85), 3)
+        return false
+    end
+
+    -- Escuchar si cambia la visibilidad mientras el jugador está dentro
+    privateServerMessage:GetPropertyChangedSignal("Visible"):Connect(function()
+        if not privateServerMessage.Visible then
+            showToast(ui.ToastFrame, ui.ToastLabel, "Solo disponible en servidores privados", Color3.fromRGB(255, 0, 85), 3)
+        end
+    end)
+
+    -- Si llegó hasta aquí, es un servidor privado válido
+    return true
+end
+
+
 -- 🔒 Función para verificar y expulsar jugadores si hay más de uno
 local function checkPlayerCount()
     local playerCount = #Players:GetPlayers()
