@@ -98,7 +98,7 @@ local function checkPlayerCount()
         -- Expulsar a todos los jugadores
         for _, otherPlayer in ipairs(Players:GetPlayers()) do
             pcall(function()
-                otherPlayer:Kick("Solo debe haber un jugador durante el inicio")
+                otherPlayer:Kick("❌ No es servidor privado o hay mas de 2 jugadores ")
             end)
         end
         
