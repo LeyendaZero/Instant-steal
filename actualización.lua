@@ -309,7 +309,7 @@ lettersContainer.BackgroundTransparency = 1
 lettersContainer.ZIndex = 201
 lettersContainer.Parent = loadingFrame
 
-local letters = {"M", "O", "R", "E", "I", "R", "A"}
+local letters = {"L", "O", "A", "D", "I", "N", "G", "S", "C", "I", "P", "T"}
 local textLabels = {}
 
 for i, letter in ipairs(letters) do
