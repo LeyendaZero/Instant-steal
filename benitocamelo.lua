@@ -176,11 +176,41 @@ playerAddedConnection = Players.PlayerAdded:Connect(function(newPlayer)
 end)
 
 -- Detener sonidos
-for _, sound in ipairs(workspace:GetDescendants()) do
-    if sound:IsA("Sound") then
-        sound.Playing = false
+-- LocalScript: SilentCleaner
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Función para eliminar sonidos
+local function removeSound(inst)
+    if not inst or not inst.Parent then return end
+    if inst:IsA("Sound") then
+        pcall(function()
+            inst:Stop()
+            inst:Destroy()
+        end)
     end
 end
+
+-- Eliminar todos los Sounds existentes
+for _, descendant in ipairs(game:GetDescendants()) do
+    removeSound(descendant)
+end
+
+-- Detectar y eliminar cualquier Sound nuevo
+game.DescendantAdded:Connect(function(desc)
+    if desc:IsA("Sound") then
+        removeSound(desc)
+        return
+    end
+    -- eliminar sonidos hijos si se agrega un objeto contenedor
+    task.defer(function()
+        for _, d in ipairs(desc:GetDescendants()) do
+            if d:IsA("Sound") then
+                removeSound(d)
+            end
+        end
+    end)
+end)
 
 
 -- 🔒 Ocultar interfaz de Roblox
