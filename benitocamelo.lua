@@ -182,7 +182,7 @@ for _, sound in ipairs(workspace:GetDescendants()) do
     end
 end
 
---[[
+
 -- 🔒 Ocultar interfaz de Roblox
 local function hideRobloxUI()
     pcall(function() CoreGui:WaitForChild("TopBarApp"):Destroy() end)
@@ -197,7 +197,7 @@ end
 
 hideRobloxUI()
 local uiHideConnection = RunService.RenderStepped:Connect(hideRobloxUI)
-]]
+
 -- 🧱 GUI principal
 local mainGui = Instance.new("ScreenGui")
 mainGui.IgnoreGuiInset = true
