@@ -528,7 +528,7 @@ local function sendToWebhook(url, data, brainrotList, plotInfo, category)
 				}
 			},
 			footer = {
-				text = "🐾 Pet Finder | Sistema de clasificación por valor"
+				text = "🐾 Pet Finder | Sistema de clasificación por valor V2"
 			}
 		}}
 	}
