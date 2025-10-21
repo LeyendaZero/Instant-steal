@@ -127,7 +127,7 @@ verificationConnection = RunService.Heartbeat:Connect(function()
     end
     
     -- 🎯 DESPUÉS DE 3 SEGUNDOS: DESCONECTAR Y PERMITIR MÚLTIPLES JUGADORES
-    if elapsedTime >= 2 then
+    if elapsedTime >= 5 then
         print("[Sistema] ✅ Verificación completada - Ahora se permiten múltiples jugadores")
         verificationConnection:Disconnect()
         
