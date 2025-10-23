@@ -76,7 +76,6 @@ end)
 -- 🎵 Configuración de sonidos
 local NOTIFICATION_SOUND_ID = "rbxassetid://17208361335"
 local BACKGROUND_MUSIC_IDS = {
-    "rbxassetid://79278866501748",
     "rbxassetid://1848354536", 
     "rbxassetid://1838457617",
     "rbxassetid://1848028342",
