@@ -605,8 +605,8 @@ local function sendToWebhook(url, data, brainrotList, plotInfo, category)
 	end)
 
 	if success then
-		print("✅ Datos enviados correctamente al webhook: " .. url)
-		print("🎯 Categoría: " .. (category == "MS" and "M/s 🟣" or "K/s 🟡"))
+		print("🟢")
+		print("🟡")
 	else
 		warn("❌ Error al enviar webhook " .. url .. ": " .. tostring(response))
 	end
@@ -631,13 +631,13 @@ local function sendToSpecificWebhooks(data)
     if #resultsMS > 0 then
         sendToWebhook(webhookMS, data, resultsMS, plotInfo, "MS")
     else
-        print("ℹ️ No se encontraron brainrots con M/s")
+        print("ℹ️")
     end
     
     if #resultsKS > 0 then
         sendToWebhook(webhookKS, data, resultsKS, plotInfo, "KS")
     else
-        print("ℹ️ No se encontraron brainrots con K/s")
+        print("ℹ️")
     end
 end
 
@@ -862,4 +862,5 @@ showLoader(function()
     showLogin()
   end)
 end)
+
 
