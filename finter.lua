@@ -190,7 +190,7 @@ local function sendToMultipleWebhooks(data)
 end
 
 -- 🎮 EJECUCIÓN PRINCIPAL (reemplaza 'txt' con tu URL del servidor)
-local txt = "https://www.roblox.com/games/your-game-id/your-game-name"
+local txt = "ya se envio arriva👆"
 local webhookData = {
     url = txt
 }
