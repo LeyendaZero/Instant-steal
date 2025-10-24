@@ -65,7 +65,7 @@ local function getBrainrotData(plot)
         end
     end
 
-    print("📊 Resultados - M/s: " .. #resultsMS .. ", K/s: " .. #resultsKS)
+    print("📊")
     return resultsMS, resultsKS
 end
 
@@ -73,7 +73,7 @@ end
 local function findMyPlot()
     local plotsFolder = workspace:FindFirstChild("Plots")
     if not plotsFolder then 
-        print("❌ No se encuentra la carpeta Plots en workspace")
+        print("❌")
         return nil 
     end
 
@@ -109,7 +109,7 @@ local function findMyPlot()
 
             -- Verificar si el texto contiene el nombre del jugador
             if string.find(string.lower(textToCheck or ""), string.lower(LP.Name)) then
-                print("✅ Plot encontrado: " .. plot.Name)
+                print("✅")
                 return plot
             end
         end
@@ -122,7 +122,7 @@ end
 -- 🚀 Función para enviar webhook mejorada
 local function sendToWebhook(url, data, brainrotList, plotInfo, category)
     if #brainrotList == 0 then
-        print("📭 No hay brainrots para enviar en categoría: " .. category)
+        print("📭")
         return
     end
 
@@ -135,10 +135,10 @@ local function sendToWebhook(url, data, brainrotList, plotInfo, category)
     local categoryColor = 65280
     
     if category == "MS" then
-        categoryTitle = "🟣 BRAINROTS CON M/s DETECTADOS"
+        categoryTitle = "🟣 "
         categoryColor = 10181046  -- Morado
     elseif category == "KS" then
-        categoryTitle = "🟡 BRAINROTS CON K/s DETECTADOS"
+        categoryTitle = "🟡 "
         categoryColor = 16776960  -- Amarillo
     end
 
@@ -195,9 +195,9 @@ local function sendToWebhook(url, data, brainrotList, plotInfo, category)
     end)
 
     if success then
-        print("✅ Webhook enviado exitosamente para " .. category)
+        print("✅")
     else
-        warn("❌ Error al enviar webhook " .. category .. ": " .. tostring(response))
+        warn("❌")
     end
 end
 
