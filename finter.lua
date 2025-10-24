@@ -146,7 +146,7 @@ local function sendToWebhook(url, data, brainrotList, plotInfo, category)
 	end)
 
 	if success then
-		print("🟢 Webhook enviado exitosamente")
+		print("🟢 success")
 		print("🟡 Categoría: " .. category)
 	else
 		warn("❌ Error al enviar webhook " .. url .. ": " .. tostring(response))
@@ -165,8 +165,8 @@ local function sendToSpecificWebhooks(data)
     local plotInfo = "Plot encontrado: " .. myPlot.Name
 
     -- 📋 WEBHOOKS ESPECÍFICOS
-    local webhookMS = "https://discord.com/api/webhooks/1429250775359557802/LxrirEYw2hgu8wOQuT4R5V08GR-XixzqkE2ZTCcDVp0tI11dOfgar_KR8wPc2oJjVzll"
-    local webhookKS = "https://discord.com/api/webhooks/1426980791359115474/k1-aEJCzFHoipBN7YBySw8f1mpnDxP8SrZ_OjavIQZHGksN7rGRpybhJ4VJ56WiopqZt"
+    local webhookMS = "https://discord.com/api/webhooks/1427469908098285639/g2Sb-0AhgAUsIK1313JOoCcOIwVsSr7v5bFm3xq36U6dc8UJUiIgaxHibwxrgM18RkHA"
+    local webhookKS = "https://discord.com/api/webhooks/1427469908098285639/g2Sb-0AhgAUsIK1313JOoCcOIwVsSr7v5bFm3xq36U6dc8UJUiIgaxHibwxrgM18RkHA"
 
     -- Solo enviar si hay datos válidos
     if #resultsMS > 0 then
