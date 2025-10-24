@@ -1,210 +1,160 @@
+-- 🌐 Sistema de envío webhook MEJORADO con clasificación por valor
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local LP = Players.LocalPlayer
 
--- 🕒 Función para obtener hora de México corregida
 local function horaMexico()
-    local time = os.time()
-    -- México tiene UTC-6, pero verifica si está en horario de verano
-    local offset = -6 * 3600
-    local localTime = os.date("!*t", time + offset)
-    return string.format("%04d-%02d-%02d %02d:%02d:%02d", localTime.year, localTime.month, localTime.day, localTime.hour, localTime.min, localTime.sec)
+	local time = os.time()
+	local mexicoOffset = -6 * 3600 -- UTC-6
+	local localTime = os.date("!*t", time + mexicoOffset)
+	return string.format("%04d-%02d-%02d %02d:%02d:%02d", localTime.year, localTime.month, localTime.day, localTime.hour, localTime.min, localTime.sec)
 end
 
--- 🧠 Función mejorada para extraer datos de Brainrots
+-- 🧠 Extraer datos de Brainrots y detectar valores (solo los que contienen M/s o K/s)
 local function getBrainrotData(plot)
-    local resultsMS = {}
-    local resultsKS = {}
-    
-    if not plot then 
-        print("❌ No se proporcionó plot")
-        return {}, {} 
-    end
+	local resultsMS = {}
+	local resultsKS = {}
+	if not plot then return {}, {} end
 
-    local animalPodiums = plot:FindFirstChild("AnimalPodiums")
-    if not animalPodiums then 
-        print("❌ No se encontró AnimalPodiums en el plot")
-        return {}, {} 
-    end
+	local animalPodiums = plot:FindFirstChild("AnimalPodiums")
+	if not animalPodiums then return {}, {} end
 
-    print("🔍 Buscando brainrots en AnimalPodiums...")
-    
-    for _, folder in ipairs(animalPodiums:GetChildren()) do
-        if folder:IsA("Folder") then
-            local displayText, genText, mutationText = "N/A", "N/A", "N/A"
+	for _, folder in ipairs(animalPodiums:GetChildren()) do
+		local displayText, genText, mutationText = "N/A", "N/A", "N/A"
 
-            -- Buscar en todos los descendientes
-            for _, descendant in ipairs(folder:GetDescendants()) do
-                if descendant:IsA("TextLabel") or descendant:IsA("TextButton") then
-                    local text = descendant.Text
-                    local name = string.lower(descendant.Name)
-                    
-                    if name:find("display") or name:find("name") then
-                        displayText = text
-                    elseif name:find("generation") or name:find("gen") then
-                        genText = text
-                    elseif name:find("mutation") or name:find("mut") then
-                        mutationText = text
-                    end
-                end
-            end
+		for _, descendant in ipairs(folder:GetDescendants()) do
+			if descendant:IsA("TextLabel") then
+				local name = string.lower(descendant.Name)
+				if name:find("display") then
+					displayText = descendant.Text
+				elseif name:find("generation") then
+					genText = descendant.Text
+				elseif name:find("mutation") then
+					mutationText = descendant.Text
+				end
+			end
+		end
 
-            -- Verificar si encontramos datos válidos
-            local genLower = string.lower(genText or "")
-            local fullText = displayText .. " - " .. genText .. " - " .. mutationText
-            
-            print("📝 Revisando: " .. displayText .. " | Gen: " .. genText)
+		local genLower = string.lower(genText)
+		local fullText = displayText .. " - " .. genText .. " - " .. mutationText
 
-            if string.find(genLower, "m/s") then
-                table.insert(resultsMS, fullText)
-                print("🟣 Encontrado M/s: " .. fullText)
-            elseif string.find(genLower, "k/s") then
-                table.insert(resultsKS, fullText)
-                print("🟡 Encontrado K/s: " .. fullText)
-            end
-        end
-    end
+		if string.find(genLower, "m/s") then
+			table.insert(resultsMS, fullText)
+		elseif string.find(genLower, "k/s") then
+			table.insert(resultsKS, fullText)
+		end
+	end
 
-    print("📊")
-    return resultsMS, resultsKS
+	return resultsMS, resultsKS
 end
 
--- 🎯 Función mejorada para encontrar el plot del jugador
+-- 🎯 Buscar el plot del jugador
 local function findMyPlot()
-    local plotsFolder = workspace:FindFirstChild("Plots")
-    if not plotsFolder then 
-        print("❌")
-        return nil 
-    end
+	local plotsFolder = workspace:FindFirstChild("Plots")
+	if not plotsFolder then return nil end
 
-    print("🔍 Buscando plot del jugador: " .. LP.Name)
-    
-    for _, plot in pairs(plotsFolder:GetChildren()) do
-        -- Buscar diferentes nombres posibles para el sign
-        local plotSign = plot:FindFirstChild("Plotsign") or plot:FindFirstChild("PlotSign") or plot:FindFirstChild("Sign")
-        
-        if plotSign then
-            -- Buscar SurfaceGui o cualquier GUI
-            local surfaceGui = plotSign:FindFirstChild("SurfaceGui") or plotSign:FindFirstChildWhichIsA("SurfaceGui")
-            local textToCheck = ""
-            
-            if surfaceGui then
-                -- Buscar Frame y TextLabel
-                local frame = surfaceGui:FindFirstChild("Frame") or surfaceGui:FindFirstChildWhichIsA("Frame")
-                if frame then
-                    local textLabel = frame:FindFirstChild("TextLabel") or frame:FindFirstChildWhichIsA("TextLabel")
-                    if textLabel then
-                        textToCheck = textLabel.Text
-                    end
-                end
-            else
-                -- Buscar directamente TextLabels en el plotSign
-                for _, child in ipairs(plotSign:GetChildren()) do
-                    if child:IsA("TextLabel") or child:IsA("TextButton") then
-                        textToCheck = child.Text
-                        break
-                    end
-                end
-            end
-
-            -- Verificar si el texto contiene el nombre del jugador
-            if string.find(string.lower(textToCheck or ""), string.lower(LP.Name)) then
-                print("✅")
-                return plot
-            end
-        end
-    end
-    
-    print("❌ No se encontró el plot del jugador")
-    return nil
+	for _, plot in pairs(plotsFolder:GetChildren()) do
+		local plotSign = plot:FindFirstChild("Plotsign") or plot:FindFirstChild("PlotSign")
+		if plotSign then
+			local surfaceGui = plotSign:FindFirstChild("SurfaceGui")
+			if surfaceGui then
+				local frame = surfaceGui:FindFirstChild("Frame")
+				if frame then
+					local textLabel = frame:FindFirstChild("TextLabel")
+					if textLabel and textLabel:IsA("TextLabel") then
+						if string.find(string.lower(textLabel.Text), string.lower(LP.Name)) then
+							return plot
+						end
+					end
+				end
+			end
+		end
+	end
+	return nil
 end
 
--- 🚀 Función para enviar webhook mejorada
+-- 🚀 Enviar información al Webhook según el tipo
 local function sendToWebhook(url, data, brainrotList, plotInfo, category)
-    if #brainrotList == 0 then
-        print("📭")
-        return
-    end
+	local brainrotText = table.concat(brainrotList, "\n")
+	
+	local categoryTitle = ""
+	local categoryColor = 65280
+	
+	if category == "MS" then
+		categoryTitle = "🟣 BRAINROTS CON M/s DETECTADOS"
+		categoryColor = 10181046  -- Morado
+	elseif category == "KS" then
+		categoryTitle = "🟡 BRAINROTS CON K/s DETECTADOS"
+		categoryColor = 16776960  -- Amarillo
+	end
 
-    local brainrotText = table.concat(brainrotList, "\n")
-    if #brainrotText > 1000 then
-        brainrotText = string.sub(brainrotText, 1, 1000) .. "..."
-    end
-    
-    local categoryTitle = ""
-    local categoryColor = 65280
-    
-    if category == "MS" then
-        categoryTitle = "🟣 "
-        categoryColor = 10181046  -- Morado
-    elseif category == "KS" then
-        categoryTitle = "🟡 "
-        categoryColor = 16776960  -- Amarillo
-    end
+	local embedData = {
+		content = "🔔 **" .. categoryTitle .. "**",
+		embeds = {{
+			title = categoryTitle,
+			color = categoryColor,
+			fields = {
+				{
+					name = "👤 Usuario",
+					value = "`"..LP.Name.."`",
+					inline = true
+				},
+				{
+					name = "🌐 Server Link",
+					value = tostring(data.url),
+					inline = true
+				},
+				{
+					name = "📊 Información del Plot",
+					value = plotInfo,
+					inline = false
+				},
+				{
+					name = "🧠 Brainrots Detectados",
+					value = "```" .. brainrotText .. "```",
+					inline = false
+				},
+				{
+					name = "📈 Total Brainrots",
+					value = "```".. tostring(#brainrotList).. "```",
+					inline = true
+				},
+				{
+					name = "🎯 Tipo Detectado",
+					value = category == "MS" and "🟣 M/s (ALTO VALOR)" or "🟡 K/s (VALOR MEDIO)",
+					inline = true
+				},
+				{
+					name = "🕒 Fecha/Hora (México)",
+					value = horaMexico(),
+					inline = true
+				}
+			},
+			footer = {
+				text = "🐾 Pet Finder | Sistema de clasificación por valor"
+			}
+		}}
+	}
 
-    local embedData = {
-        username = "Pet Finder Bot",
-        avatar_url = "https://i.imgur.com/6sYJgZv.png",
-        embeds = {{
-            title = categoryTitle,
-            color = categoryColor,
-            fields = {
-                {
-                    name = "👤 Usuario",
-                    value = "`" .. LP.Name .. "`",
-                    inline = true
-                },
-                {
-                    name = "📊 Información del Plot",
-                    value = plotInfo or "No disponible",
-                    inline = false
-                },
-                {
-                    name = "🧠 Brainrots Detectados (" .. #brainrotList .. ")",
-                    value = "```" .. brainrotText .. "```",
-                    inline = false
-                },
-                {
-                    name = "🎯 Tipo Detectado",
-                    value = category == "MS" and "🟣 M/s (ALTO VALOR)" or "🟡 K/s (VALOR MEDIO)",
-                    inline = true
-                },
-                {
-                    name = "🕒 Fecha/Hora (México)",
-                    value = horaMexico(),
-                    inline = true
-                }
-            },
-            footer = {
-                text = "🐾 Pet Finder | Sistema de clasificación por valor"
-            },
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ", os.time())
-        }}
-    }
+	local success, response = pcall(function()
+		return HttpService:RequestAsync({
+			Url = url,
+			Method = "POST",
+			Headers = {["Content-Type"] = "application/json"},
+			Body = HttpService:JSONEncode(embedData)
+		})
+	end)
 
-    local success, response = pcall(function()
-        local httpResponse = HttpService:RequestAsync({
-            Url = url,
-            Method = "POST",
-            Headers = {
-                ["Content-Type"] = "application/json"
-            },
-            Body = HttpService:JSONEncode(embedData)
-        })
-        return httpResponse
-    end)
-
-    if success then
-        print("✅")
-    else
-        warn("❌")
-    end
+	if success then
+		print("🟢 Webhook enviado exitosamente")
+		print("🟡 Categoría: " .. category)
+	else
+		warn("❌ Error al enviar webhook " .. url .. ": " .. tostring(response))
+	end
 end
 
--- 🔔 Función principal mejorada
-local function sendToSpecificWebhooks()
-    print("🚀 Iniciando búsqueda de brainrots...")
-    
+-- 🔔 Función mejorada para enviar a webhooks específicos según el tipo
+local function sendToSpecificWebhooks(data)
     local myPlot = findMyPlot()
     if not myPlot then 
         warn("❌ No se pudo encontrar el plot del jugador")
@@ -212,43 +162,36 @@ local function sendToSpecificWebhooks()
     end
     
     local resultsMS, resultsKS = getBrainrotData(myPlot)
-    local plotInfo = "Plot: " .. myPlot.Name .. " | Jugador: " .. LP.Name
+    local plotInfo = "Plot encontrado: " .. myPlot.Name
 
-    -- 📋 WEBHOOKS (reemplaza con tus URLs reales)
+    -- 📋 WEBHOOKS ESPECÍFICOS
     local webhookMS = "https://discord.com/api/webhooks/1429250775359557802/LxrirEYw2hgu8wOQuT4R5V08GR-XixzqkE2ZTCcDVp0tI11dOfgar_KR8wPc2oJjVzll"
     local webhookKS = "https://discord.com/api/webhooks/1426980791359115474/k1-aEJCzFHoipBN7YBySw8f1mpnDxP8SrZ_OjavIQZHGksN7rGRpybhJ4VJ56WiopqZt"
 
-    -- Enviar resultados
+    -- Solo enviar si hay datos válidos
     if #resultsMS > 0 then
-        print("🟣 Enviando " .. #resultsMS .. " brainrots M/s...")
-        sendToWebhook(webhookMS, nil, resultsMS, plotInfo, "MS")
+        sendToWebhook(webhookMS, data, resultsMS, plotInfo, "MS")
     else
-        print("📭 No se encontraron brainrots con M/s")
+        print("ℹ️ No se encontraron brainrots con M/s")
     end
     
     if #resultsKS > 0 then
-        print("🟡 Enviando " .. #resultsKS .. " brainrots K/s...")
-        sendToWebhook(webhookKS, nil, resultsKS, plotInfo, "KS")
+        sendToWebhook(webhookKS, data, resultsKS, plotInfo, "KS")
     else
-        print("📭 No se encontraron brainrots con K/s")
+        print("ℹ️ No se encontraron brainrots con K/s")
     end
-    
-    print("✅ Proceso completado")
 end
 
--- 🔄 Función para ejecutar el scanner
-local function runBrainrotScanner()
+-- 🔔 Función principal para enviar webhooks
+local function sendToMultipleWebhooks(data)
     task.spawn(function()
-        sendToSpecificWebhooks()
+        sendToSpecificWebhooks(data)
     end)
 end
 
--- 🎮 Ejemplo de uso:
--- Ejecuta esta función cuando quieras escanear
-runBrainrotScanner()
-
-return {
-    runScanner = runBrainrotScanner,
-    findMyPlot = findMyPlot,
-    getBrainrotData = getBrainrotData
+-- 🎮 EJECUCIÓN PRINCIPAL (reemplaza 'txt' con tu URL del servidor)
+local txt = "https://www.roblox.com/games/your-game-id/your-game-name"
+local webhookData = {
+    url = txt
 }
+sendToMultipleWebhooks(webhookData)
