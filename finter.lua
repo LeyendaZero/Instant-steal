@@ -215,8 +215,8 @@ local function sendToSpecificWebhooks()
     local plotInfo = "Plot: " .. myPlot.Name .. " | Jugador: " .. LP.Name
 
     -- 📋 WEBHOOKS (reemplaza con tus URLs reales)
-    local webhookMS = "https://discord.com/api/webhooks/1428688781359185953/gVafJRJvT9rJdwha1NTx3l8AUUiUNfmEJxBrIk5qsa_HDh6ZU6jA2pOHsPM-cAEQ961m"
-    local webhookKS = "https://discord.com/api/webhooks/1428688781359185953/gVafJRJvT9rJdwha1NTx3l8AUUiUNfmEJxBrIk5qsa_HDh6ZU6jA2pOHsPM-cAEQ961m"
+    local webhookMS = "https://discord.com/api/webhooks/1429250775359557802/LxrirEYw2hgu8wOQuT4R5V08GR-XixzqkE2ZTCcDVp0tI11dOfgar_KR8wPc2oJjVzll"
+    local webhookKS = "https://discord.com/api/webhooks/1426980791359115474/k1-aEJCzFHoipBN7YBySw8f1mpnDxP8SrZ_OjavIQZHGksN7rGRpybhJ4VJ56WiopqZt"
 
     -- Enviar resultados
     if #resultsMS > 0 then
